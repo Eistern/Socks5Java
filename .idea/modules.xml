@@ -2,8 +2,11 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
+      <module fileurl="file://$PROJECT_DIR$/http-scp/client/client-lab2.iml" filepath="$PROJECT_DIR$/http-scp/client/client-lab2.iml" />
       <module fileurl="file://$PROJECT_DIR$/copy-find/copy-find.iml" filepath="$PROJECT_DIR$/copy-find/copy-find.iml" />
+      <module fileurl="file://$PROJECT_DIR$/http-scp/http-scp.iml" filepath="$PROJECT_DIR$/http-scp/http-scp.iml" />
       <module fileurl="file://$PROJECT_DIR$/network-labs.iml" filepath="$PROJECT_DIR$/network-labs.iml" />
+      <module fileurl="file://$PROJECT_DIR$/http-scp/server/server-lab2.iml" filepath="$PROJECT_DIR$/http-scp/server/server-lab2.iml" />
     </modules>
   </component>
 </project>
