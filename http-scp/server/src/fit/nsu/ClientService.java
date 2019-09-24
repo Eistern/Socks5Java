@@ -3,14 +3,27 @@ package fit.nsu;
 import java.io.*;
 import java.net.Socket;
 import java.util.Date;
+import java.util.Timer;
+import java.util.TimerTask;
 
 public class ClientService implements Runnable {
     private final Socket client;
+    private final Timer timer;
     private Date startTime;
     private long bytesTransmitted;
+    private String name;
+    private boolean hasSpeed;
 
     ClientService(Socket client) {
         this.client = client;
+        this.timer = new Timer();
+        this.hasSpeed = false;
+    }
+
+    private void speedTest() {
+        hasSpeed = true;
+        double time = new Date().getTime() - startTime.getTime();
+        System.out.println("File " + name + " transmitting with speed: " + (bytesTransmitted * 8) / (time / 1000) + "b/s");
     }
 
     @Override
@@ -23,6 +36,8 @@ public class ClientService implements Runnable {
             String fileName = fromClientStream.readUTF();
             long fileLength = fromClientStream.readLong();
 
+            name = fileName;
+
             File uploadsPath = Main.getUploadsDirectory();
             String separator = uploadsPath.toPath().getFileSystem().getSeparator();
 
@@ -30,22 +45,40 @@ public class ClientService implements Runnable {
             bytesTransmitted = 0;
             startTime = new Date();
 
+            TimerTask task = new TimerTask() {
+                @Override
+                public void run() {
+                    speedTest();
+                }
+            };
+
+            timer.schedule(task, 3000, 3000);
             byte[] input = new byte[256];
             int bytesGet;
             while ((bytesGet = fromClient.read(input)) != -1) {
                 bytesTransmitted += bytesGet;
                 fileOutputStream.write(input, 0, bytesGet);
             }
+            timer.cancel();
+
+            toClient.write(bytesTransmitted == fileLength ? 0 : 1);
+            toClient.flush();
+
+            if (!hasSpeed)
+                speedTest();
 
             fileOutputStream.flush();
             fileOutputStream.close();
+
         } catch (IOException e) {
+            System.err.println("Error with client");
             e.printStackTrace();
         }
         finally {
             try {
                 client.close();
             } catch (IOException e) {
+                System.err.println("Error while closing socket");
                 e.printStackTrace();
             }
         }

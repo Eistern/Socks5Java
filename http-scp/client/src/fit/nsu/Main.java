@@ -32,6 +32,14 @@ public class Main {
         int bytesGet;
         while ((bytesGet = fromFile.read(output)) != -1)
             toServer.write(output, 0, bytesGet);
+        toServer.flush();
+        socket.shutdownOutput();
+
+        int result = fromServer.read();
+        if (result == 0)
+            System.out.println("Transmission successful");
+        else
+            System.out.println("Server error occurred");
 
         socket.close();
     }
