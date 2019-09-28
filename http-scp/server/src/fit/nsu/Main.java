@@ -18,7 +18,7 @@ public class Main {
             return;
         }
 
-        uploadsDirectory = new File("http-scp/server/resources/uploads");
+        uploadsDirectory = new File("http-scp/server/uploads");
         if (!uploadsDirectory.exists())
             if (!uploadsDirectory.mkdir()) {
                 System.err.println("Can't create directory uploads");
@@ -31,7 +31,7 @@ public class Main {
 
             ClientService clientService = new ClientService(client);
             Thread clientThread = new Thread(clientService);
-            clientThread.run();
+            clientThread.start();
         }
     }
 }

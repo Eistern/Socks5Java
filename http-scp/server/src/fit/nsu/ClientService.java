@@ -10,9 +10,9 @@ public class ClientService implements Runnable {
     private final Socket client;
     private final Timer timer;
     private Date startTime;
-    private long bytesTransmitted;
+    private volatile long bytesTransmitted;
     private String name;
-    private boolean hasSpeed;
+    private volatile boolean hasSpeed;
 
     ClientService(Socket client) {
         this.client = client;
@@ -40,6 +40,8 @@ public class ClientService implements Runnable {
 
             File uploadsPath = Main.getUploadsDirectory();
             String separator = uploadsPath.toPath().getFileSystem().getSeparator();
+            if (fileName.contains(separator))
+                fileName = fileName.substring(fileName.indexOf(separator));
 
             FileOutputStream fileOutputStream = new FileOutputStream(uploadsPath.getPath() + separator + fileName);
             bytesTransmitted = 0;
@@ -55,8 +57,11 @@ public class ClientService implements Runnable {
             timer.schedule(task, 3000, 3000);
             byte[] input = new byte[256];
             int bytesGet;
+            long bytesTransmittedLocal;
             while ((bytesGet = fromClient.read(input)) != -1) {
-                bytesTransmitted += bytesGet;
+                bytesTransmittedLocal = bytesTransmitted;
+                bytesTransmittedLocal += bytesGet;
+                bytesTransmitted = bytesTransmittedLocal;
                 fileOutputStream.write(input, 0, bytesGet);
             }
             timer.cancel();
@@ -75,6 +80,7 @@ public class ClientService implements Runnable {
             e.printStackTrace();
         }
         finally {
+            timer.cancel();
             try {
                 client.close();
             } catch (IOException e) {

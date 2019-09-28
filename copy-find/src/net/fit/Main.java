@@ -5,7 +5,7 @@ import java.net.*;
 import java.util.*;
 
 public class Main {
-    private static boolean timeout = false;
+    private static volatile boolean timeout = false;
     private static List<ConnectedEntry> connectedCopies = new ArrayList<>();
     private static int iteration = 0;
     private static boolean hasChanged = false;
