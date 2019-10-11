@@ -1,4 +1,4 @@
-package net.fit;
+package net.fit.dto;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -15,8 +15,12 @@ import java.util.UUID;
 @AllArgsConstructor
 @NoArgsConstructor(force = true)
 @JsonIgnoreProperties(ignoreUnknown = true)
-class Message implements Serializable, TreeData {
+public class Message implements Serializable, TreeData {
     private final UUID identifier;
+    private final String sourceHost;
     @EqualsAndHashCode.Exclude private final String message;
     @EqualsAndHashCode.Exclude @JsonIgnore private final Date timeSent;
+    public String getPrintingRep() {
+        return sourceHost + ": " + message;
+    }
 }

@@ -1,27 +1,38 @@
 package net.fit;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import net.fit.dto.ChatNode;
+import net.fit.listeners.InputListener;
+import net.fit.listeners.SocketListener;
+import net.fit.nodes.ConnectedNodes;
+import net.fit.nodes.MessageManager;
 
-import java.net.InetAddress;
+import java.io.IOException;
+import java.net.DatagramSocket;
 import java.net.InetSocketAddress;
-import java.util.Date;
-import java.util.UUID;
 
 public class Main {
-    public static void main(String[] args) throws JsonProcessingException {
-        ChatNode node = new ChatNode(new InetSocketAddress(InetAddress.getLoopbackAddress(), 4000));
-        Message message = new Message(UUID.randomUUID(), "Hello", new Date());
-        ObjectMapper mapper = new ObjectMapper();
+    public static void main(String[] args) throws IOException {
+        if (args.length % 2 != 1 || args.length < 3) {
+            System.err.println("Wrong arguments");
+            return;
+        }
 
-        String packetJson;
-        TreePacket packet = new TreePacket(TreePacket.PacketType.CONNECT_NODE, node);
-        System.out.println(packetJson = mapper.writeValueAsString(packet));
+        int port = Integer.parseInt(args[1]);
+        DatagramSocket socket = new DatagramSocket(port);
+        ConnectedNodes nodes = new ConnectedNodes(socket);
+        MessageManager manager = new MessageManager(nodes);
+        InputListener inputListener = new InputListener(manager, args[0]);
+        SocketListener socketListener = new SocketListener(socket, nodes, manager, Integer.parseInt(args[2]));
 
-        TreePacket packet2 = mapper.readValue(packetJson, TreePacket.class);
-        System.out.println(packet.equals(packet2));
+        for (int i = 3; i < args.length; i+=2) {
+            nodes.addNode(new ChatNode(new InetSocketAddress(args[i], Integer.parseInt(args[i+1]))), true);
+        }
 
-        TreePacket packet1 = new TreePacket(TreePacket.PacketType.CONNECT_NODE, node);
-        System.out.println(mapper.writeValueAsString(null));
+        Thread console = new Thread(inputListener, "CONSOLE");
+        Thread socketHandler = new Thread(socketListener, "SOCKET");
+        Thread messageDelivery = new Thread(manager, "MESSAGES");
+        messageDelivery.start();
+        console.start();
+        socketHandler.start();
     }
 }

@@ -1,4 +1,4 @@
-package net.fit;
+package net.fit.dto;
 
 import lombok.Data;
 import lombok.NoArgsConstructor;

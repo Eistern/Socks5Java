@@ -1,4 +1,4 @@
-package net.fit;
+package net.fit.dto;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.*;
@@ -10,18 +10,22 @@ import java.util.List;
 
 @Data
 @NoArgsConstructor(force = true)
-@RequiredArgsConstructor
+@RequiredArgsConstructor(access = AccessLevel.PUBLIC)
 @AllArgsConstructor
-class ChatNode implements Serializable, TreeData {
+public class ChatNode implements Serializable, TreeData {
     private final InetSocketAddress address;
 
     @EqualsAndHashCode.Exclude @JsonIgnore private ChatNode replacer;
     @EqualsAndHashCode.Exclude @JsonIgnore private List<Message> unconfirmedMessages = new ArrayList<>();
 
-    public void addMessage(Message message) {
+    public void addUnconfirmedMessage(Message message) {
         unconfirmedMessages.add(message);
     }
-    public void messageSent(Message message) {
-        unconfirmedMessages.remove(message);
+    public boolean messageSent(Message message) {
+        if (unconfirmedMessages.contains(message))
+            unconfirmedMessages.remove(message);
+        else
+            return false;
+        return true;
     }
 }
