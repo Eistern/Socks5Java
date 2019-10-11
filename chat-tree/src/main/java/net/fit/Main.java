@@ -3,12 +3,12 @@ package net.fit;
 import net.fit.dto.ChatNode;
 import net.fit.listeners.InputListener;
 import net.fit.listeners.SocketListener;
-import net.fit.nodes.ConnectedNodes;
-import net.fit.nodes.MessageManager;
+import net.fit.nodes.*;
 
 import java.io.IOException;
 import java.net.DatagramSocket;
 import java.net.InetSocketAddress;
+import java.util.Timer;
 
 public class Main {
     public static void main(String[] args) throws IOException {
@@ -34,5 +34,10 @@ public class Main {
         messageDelivery.start();
         console.start();
         socketHandler.start();
+
+        Timer timer = new Timer();
+        timer.schedule(new MessageRepeater(nodes), 3000, 3000);
+        timer.schedule(new NodeKeepAlive(nodes), 1000, 1000);
+        timer.schedule(new NodeControl(nodes), 5000, 5000);
     }
 }

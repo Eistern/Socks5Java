@@ -12,5 +12,5 @@ import net.fit.nodes.ConnectedNodes;
         @JsonSubTypes.Type(value = Message.class),
         @JsonSubTypes.Type(value = ConnectedNodes.class)
 })
-interface TreeData {
+public interface TreeData {
 }

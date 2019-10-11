@@ -17,15 +17,24 @@ public class ChatNode implements Serializable, TreeData {
 
     @EqualsAndHashCode.Exclude @JsonIgnore private ChatNode replacer;
     @EqualsAndHashCode.Exclude @JsonIgnore private List<Message> unconfirmedMessages = new ArrayList<>();
+    @EqualsAndHashCode.Exclude @JsonIgnore private int trust = 0;
 
     public void addUnconfirmedMessage(Message message) {
         unconfirmedMessages.add(message);
     }
     public boolean messageSent(Message message) {
-        if (unconfirmedMessages.contains(message))
+        if (unconfirmedMessages.contains(message)) {
             unconfirmedMessages.remove(message);
+            pardon();
+        }
         else
             return false;
         return true;
+    }
+    public void pardon() {
+        trust = 0;
+    }
+    public void incrementTrust() {
+        trust++;
     }
 }

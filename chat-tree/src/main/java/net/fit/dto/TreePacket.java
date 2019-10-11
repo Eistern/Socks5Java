@@ -11,7 +11,7 @@ import java.io.Serializable;
 @RequiredArgsConstructor
 public class TreePacket implements Serializable {
     public enum PacketType {
-        MESSAGE, CONNECT_NODE, DISCONNECT_NODE, UPDATE_REPLACER
+        MESSAGE, CONNECT_NODE, DISCONNECT_NODE, UPDATE_REPLACER, RUOK, IMOK
     }
     private final PacketType packetType;
     private final TreeData data;

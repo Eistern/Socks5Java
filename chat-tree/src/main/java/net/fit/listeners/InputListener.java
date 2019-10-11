@@ -26,7 +26,7 @@ public class InputListener implements Runnable {
 
                 Message message = new Message(UUID.randomUUID(), hostName, input, new Date());
                 System.out.println(message.getPrintingRep());
-                manager.addMessage(message);
+                manager.addMessage(message, null);
             } catch (IOException e) {
                 e.printStackTrace();
             }

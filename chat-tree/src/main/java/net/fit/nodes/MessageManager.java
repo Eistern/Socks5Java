@@ -2,13 +2,15 @@ package net.fit.nodes;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import net.fit.dto.Message;
+import net.fit.dto.Pair;
 import net.fit.dto.TreePacket;
 
+import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.List;
 
 public class MessageManager implements Runnable {
-    private List<Message> messagesToBroadcast = new ArrayList<>();
+    private List<Pair<Message, InetSocketAddress>> messagesToBroadcast = new ArrayList<>();
     private ConnectedNodes nodes;
     private final Object listLock = new Object();
 
@@ -16,9 +18,9 @@ public class MessageManager implements Runnable {
         this.nodes = nodes;
     }
 
-    public void addMessage(Message newMessage) {
+    public void addMessage(Message newMessage, InetSocketAddress from) {
         synchronized (listLock) {
-            messagesToBroadcast.add(newMessage);
+            messagesToBroadcast.add(new Pair<>(newMessage, from));
             listLock.notify();
         }
     }
@@ -36,8 +38,8 @@ public class MessageManager implements Runnable {
                 }
             }
             try {
-                Message message = messagesToBroadcast.remove(0);
-                nodes.broadcastMessage(new TreePacket(TreePacket.PacketType.MESSAGE, message), null);
+                Pair<Message, InetSocketAddress> message = messagesToBroadcast.remove(0);
+                nodes.broadcastMessage(new TreePacket(TreePacket.PacketType.MESSAGE, message.getKey()), null, message.getValue());
             } catch (JsonProcessingException e) {
                 e.printStackTrace();
             }

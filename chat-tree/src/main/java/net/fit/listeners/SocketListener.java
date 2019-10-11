@@ -29,8 +29,10 @@ public class SocketListener implements Runnable {
             try {
                 socket.receive(received);
 
-                if (Math.random() * 100 < loss)
+                if (Math.random() * 100 < loss) {
+                    System.out.println("Packet lost");
                     continue;
+                }
 
                 InetSocketAddress address = new InetSocketAddress(received.getAddress(), received.getPort());
                 TreePacket receivedPacket = mapper.readValue(received.getData(), TreePacket.class);
@@ -38,7 +40,7 @@ public class SocketListener implements Runnable {
                     case MESSAGE:
                         if (!nodes.ackMessage((Message) receivedPacket.getData(), address)) {
                             System.out.println(((Message) receivedPacket.getData()).getPrintingRep());
-                            manager.addMessage((Message) receivedPacket.getData());
+                            manager.addMessage((Message) receivedPacket.getData(), new InetSocketAddress(received.getAddress(), received.getPort()));
                         }
                         break;
                     case CONNECT_NODE:
@@ -50,6 +52,10 @@ public class SocketListener implements Runnable {
                     case UPDATE_REPLACER:
                         nodes.updateReplacer(new ChatNode(address), (ChatNode) receivedPacket.getData());
                         break;
+                    case IMOK:
+                        nodes.pardonNode(address);
+                    case RUOK:
+                        nodes.unicastMessage(new TreePacket(TreePacket.PacketType.IMOK, null), address);
                     default:
                         break;
                 }
