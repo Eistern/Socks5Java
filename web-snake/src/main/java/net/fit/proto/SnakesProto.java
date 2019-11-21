@@ -16,7 +16,7 @@ public final class SnakesProto {
   }
   /**
    * <pre>
-   * Роль узла в топологии
+   * Роль узла в топологии связей узлов в пределах игры
    * </pre>
    *
    * Protobuf enum {@code snakes.NodeRole}
@@ -49,7 +49,7 @@ public final class SnakesProto {
     DEPUTY(2),
     /**
      * <pre>
-     * Наблюдатель, то же что обычный, но не имеет змеи в статусе ALIVE, только получает обновления статуса
+     * Наблюдатель, похож на NORMAL, но не имеет змеи в статусе ALIVE, только получает обновления статуса
      * </pre>
      *
      * <code>VIEWER = 3;</code>
@@ -83,7 +83,7 @@ public final class SnakesProto {
     public static final int DEPUTY_VALUE = 2;
     /**
      * <pre>
-     * Наблюдатель, то же что обычный, но не имеет змеи в статусе ALIVE, только получает обновления статуса
+     * Наблюдатель, похож на NORMAL, но не имеет змеи в статусе ALIVE, только получает обновления статуса
      * </pre>
      *
      * <code>VIEWER = 3;</code>
@@ -280,6 +280,152 @@ public final class SnakesProto {
     // @@protoc_insertion_point(enum_scope:snakes.PlayerType)
   }
 
+  /**
+   * Protobuf enum {@code snakes.Direction}
+   */
+  public enum Direction
+      implements com.google.protobuf.ProtocolMessageEnum {
+    /**
+     * <pre>
+     * Вверх (в отрицательном направлении оси y)
+     * </pre>
+     *
+     * <code>UP = 1;</code>
+     */
+    UP(1),
+    /**
+     * <pre>
+     * Вниз (в положительном направлении оси y)
+     * </pre>
+     *
+     * <code>DOWN = 2;</code>
+     */
+    DOWN(2),
+    /**
+     * <pre>
+     * Влево (в отрицательном направлении оси x)
+     * </pre>
+     *
+     * <code>LEFT = 3;</code>
+     */
+    LEFT(3),
+    /**
+     * <pre>
+     * Вправо (в положительном направлении оси x)
+     * </pre>
+     *
+     * <code>RIGHT = 4;</code>
+     */
+    RIGHT(4),
+    ;
+
+    /**
+     * <pre>
+     * Вверх (в отрицательном направлении оси y)
+     * </pre>
+     *
+     * <code>UP = 1;</code>
+     */
+    public static final int UP_VALUE = 1;
+    /**
+     * <pre>
+     * Вниз (в положительном направлении оси y)
+     * </pre>
+     *
+     * <code>DOWN = 2;</code>
+     */
+    public static final int DOWN_VALUE = 2;
+    /**
+     * <pre>
+     * Влево (в отрицательном направлении оси x)
+     * </pre>
+     *
+     * <code>LEFT = 3;</code>
+     */
+    public static final int LEFT_VALUE = 3;
+    /**
+     * <pre>
+     * Вправо (в положительном направлении оси x)
+     * </pre>
+     *
+     * <code>RIGHT = 4;</code>
+     */
+    public static final int RIGHT_VALUE = 4;
+
+
+    public final int getNumber() {
+      return value;
+    }
+
+    /**
+     * @param value The numeric wire value of the corresponding enum entry.
+     * @return The enum associated with the given numeric wire value.
+     * @deprecated Use {@link #forNumber(int)} instead.
+     */
+    @java.lang.Deprecated
+    public static Direction valueOf(int value) {
+      return forNumber(value);
+    }
+
+    /**
+     * @param value The numeric wire value of the corresponding enum entry.
+     * @return The enum associated with the given numeric wire value.
+     */
+    public static Direction forNumber(int value) {
+      switch (value) {
+        case 1: return UP;
+        case 2: return DOWN;
+        case 3: return LEFT;
+        case 4: return RIGHT;
+        default: return null;
+      }
+    }
+
+    public static com.google.protobuf.Internal.EnumLiteMap<Direction>
+        internalGetValueMap() {
+      return internalValueMap;
+    }
+    private static final com.google.protobuf.Internal.EnumLiteMap<
+        Direction> internalValueMap =
+          new com.google.protobuf.Internal.EnumLiteMap<Direction>() {
+            public Direction findValueByNumber(int number) {
+              return Direction.forNumber(number);
+            }
+          };
+
+    public final com.google.protobuf.Descriptors.EnumValueDescriptor
+        getValueDescriptor() {
+      return getDescriptor().getValues().get(ordinal());
+    }
+    public final com.google.protobuf.Descriptors.EnumDescriptor
+        getDescriptorForType() {
+      return getDescriptor();
+    }
+    public static final com.google.protobuf.Descriptors.EnumDescriptor
+        getDescriptor() {
+      return net.fit.proto.SnakesProto.getDescriptor().getEnumTypes().get(2);
+    }
+
+    private static final Direction[] VALUES = values();
+
+    public static Direction valueOf(
+        com.google.protobuf.Descriptors.EnumValueDescriptor desc) {
+      if (desc.getType() != getDescriptor()) {
+        throw new java.lang.IllegalArgumentException(
+          "EnumValueDescriptor is not for this type.");
+      }
+      return VALUES[desc.getIndex()];
+    }
+
+    private final int value;
+
+    private Direction(int value) {
+      this.value = value;
+    }
+
+    // @@protoc_insertion_point(enum_scope:snakes.Direction)
+  }
+
   public interface GamePlayerOrBuilder extends
       // @@protoc_insertion_point(interface_extends:snakes.GamePlayer)
       com.google.protobuf.MessageOrBuilder {
@@ -334,7 +480,7 @@ public final class SnakesProto {
 
     /**
      * <pre>
-     * IPv4 или IPv6 адрес игрока в виде строки
+     * IPv4 или IPv6 адрес игрока в виде строки (отправитель не знает свой IP, поэтому указывает тут пустую строку)
      * </pre>
      *
      * <code>required string ip_address = 3;</code>
@@ -343,7 +489,7 @@ public final class SnakesProto {
     boolean hasIpAddress();
     /**
      * <pre>
-     * IPv4 или IPv6 адрес игрока в виде строки
+     * IPv4 или IPv6 адрес игрока в виде строки (отправитель не знает свой IP, поэтому указывает тут пустую строку)
      * </pre>
      *
      * <code>required string ip_address = 3;</code>
@@ -352,7 +498,7 @@ public final class SnakesProto {
     java.lang.String getIpAddress();
     /**
      * <pre>
-     * IPv4 или IPv6 адрес игрока в виде строки
+     * IPv4 или IPv6 адрес игрока в виде строки (отправитель не знает свой IP, поэтому указывает тут пустую строку)
      * </pre>
      *
      * <code>required string ip_address = 3;</code>
@@ -417,6 +563,25 @@ public final class SnakesProto {
      * @return The type.
      */
     net.fit.proto.SnakesProto.PlayerType getType();
+
+    /**
+     * <pre>
+     * Число очков, которые набрал игрок
+     * </pre>
+     *
+     * <code>required int32 score = 7;</code>
+     * @return Whether the score field is set.
+     */
+    boolean hasScore();
+    /**
+     * <pre>
+     * Число очков, которые набрал игрок
+     * </pre>
+     *
+     * <code>required int32 score = 7;</code>
+     * @return The score.
+     */
+    int getScore();
   }
   /**
    * <pre>
@@ -516,6 +681,11 @@ public final class SnakesProto {
                 bitField0_ |= 0x00000020;
                 type_ = rawValue;
               }
+              break;
+            }
+            case 56: {
+              bitField0_ |= 0x00000040;
+              score_ = input.readInt32();
               break;
             }
             default: {
@@ -637,7 +807,7 @@ public final class SnakesProto {
     private volatile java.lang.Object ipAddress_;
     /**
      * <pre>
-     * IPv4 или IPv6 адрес игрока в виде строки
+     * IPv4 или IPv6 адрес игрока в виде строки (отправитель не знает свой IP, поэтому указывает тут пустую строку)
      * </pre>
      *
      * <code>required string ip_address = 3;</code>
@@ -648,7 +818,7 @@ public final class SnakesProto {
     }
     /**
      * <pre>
-     * IPv4 или IPv6 адрес игрока в виде строки
+     * IPv4 или IPv6 адрес игрока в виде строки (отправитель не знает свой IP, поэтому указывает тут пустую строку)
      * </pre>
      *
      * <code>required string ip_address = 3;</code>
@@ -670,7 +840,7 @@ public final class SnakesProto {
     }
     /**
      * <pre>
-     * IPv4 или IPv6 адрес игрока в виде строки
+     * IPv4 или IPv6 адрес игрока в виде строки (отправитель не знает свой IP, поэтому указывает тут пустую строку)
      * </pre>
      *
      * <code>required string ip_address = 3;</code>
@@ -769,6 +939,31 @@ public final class SnakesProto {
       return result == null ? net.fit.proto.SnakesProto.PlayerType.HUMAN : result;
     }
 
+    public static final int SCORE_FIELD_NUMBER = 7;
+    private int score_;
+    /**
+     * <pre>
+     * Число очков, которые набрал игрок
+     * </pre>
+     *
+     * <code>required int32 score = 7;</code>
+     * @return Whether the score field is set.
+     */
+    public boolean hasScore() {
+      return ((bitField0_ & 0x00000040) != 0);
+    }
+    /**
+     * <pre>
+     * Число очков, которые набрал игрок
+     * </pre>
+     *
+     * <code>required int32 score = 7;</code>
+     * @return The score.
+     */
+    public int getScore() {
+      return score_;
+    }
+
     private byte memoizedIsInitialized = -1;
     @java.lang.Override
     public final boolean isInitialized() {
@@ -796,6 +991,10 @@ public final class SnakesProto {
         memoizedIsInitialized = 0;
         return false;
       }
+      if (!hasScore()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
       memoizedIsInitialized = 1;
       return true;
     }
@@ -820,6 +1019,9 @@ public final class SnakesProto {
       }
       if (((bitField0_ & 0x00000020) != 0)) {
         output.writeEnum(6, type_);
+      }
+      if (((bitField0_ & 0x00000040) != 0)) {
+        output.writeInt32(7, score_);
       }
       unknownFields.writeTo(output);
     }
@@ -851,6 +1053,10 @@ public final class SnakesProto {
       if (((bitField0_ & 0x00000020) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeEnumSize(6, type_);
+      }
+      if (((bitField0_ & 0x00000040) != 0)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeInt32Size(7, score_);
       }
       size += unknownFields.getSerializedSize();
       memoizedSize = size;
@@ -895,6 +1101,11 @@ public final class SnakesProto {
       if (hasType()) {
         if (type_ != other.type_) return false;
       }
+      if (hasScore() != other.hasScore()) return false;
+      if (hasScore()) {
+        if (getScore()
+            != other.getScore()) return false;
+      }
       if (!unknownFields.equals(other.unknownFields)) return false;
       return true;
     }
@@ -929,6 +1140,10 @@ public final class SnakesProto {
       if (hasType()) {
         hash = (37 * hash) + TYPE_FIELD_NUMBER;
         hash = (53 * hash) + type_;
+      }
+      if (hasScore()) {
+        hash = (37 * hash) + SCORE_FIELD_NUMBER;
+        hash = (53 * hash) + getScore();
       }
       hash = (29 * hash) + unknownFields.hashCode();
       memoizedHashCode = hash;
@@ -1079,6 +1294,8 @@ public final class SnakesProto {
         bitField0_ = (bitField0_ & ~0x00000010);
         type_ = 0;
         bitField0_ = (bitField0_ & ~0x00000020);
+        score_ = 0;
+        bitField0_ = (bitField0_ & ~0x00000040);
         return this;
       }
 
@@ -1131,6 +1348,10 @@ public final class SnakesProto {
           to_bitField0_ |= 0x00000020;
         }
         result.type_ = type_;
+        if (((from_bitField0_ & 0x00000040) != 0)) {
+          result.score_ = score_;
+          to_bitField0_ |= 0x00000040;
+        }
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -1202,6 +1423,9 @@ public final class SnakesProto {
         if (other.hasType()) {
           setType(other.getType());
         }
+        if (other.hasScore()) {
+          setScore(other.getScore());
+        }
         this.mergeUnknownFields(other.unknownFields);
         onChanged();
         return this;
@@ -1222,6 +1446,9 @@ public final class SnakesProto {
           return false;
         }
         if (!hasRole()) {
+          return false;
+        }
+        if (!hasScore()) {
           return false;
         }
         return true;
@@ -1411,7 +1638,7 @@ public final class SnakesProto {
       private java.lang.Object ipAddress_ = "";
       /**
        * <pre>
-       * IPv4 или IPv6 адрес игрока в виде строки
+       * IPv4 или IPv6 адрес игрока в виде строки (отправитель не знает свой IP, поэтому указывает тут пустую строку)
        * </pre>
        *
        * <code>required string ip_address = 3;</code>
@@ -1422,7 +1649,7 @@ public final class SnakesProto {
       }
       /**
        * <pre>
-       * IPv4 или IPv6 адрес игрока в виде строки
+       * IPv4 или IPv6 адрес игрока в виде строки (отправитель не знает свой IP, поэтому указывает тут пустую строку)
        * </pre>
        *
        * <code>required string ip_address = 3;</code>
@@ -1444,7 +1671,7 @@ public final class SnakesProto {
       }
       /**
        * <pre>
-       * IPv4 или IPv6 адрес игрока в виде строки
+       * IPv4 или IPv6 адрес игрока в виде строки (отправитель не знает свой IP, поэтому указывает тут пустую строку)
        * </pre>
        *
        * <code>required string ip_address = 3;</code>
@@ -1465,7 +1692,7 @@ public final class SnakesProto {
       }
       /**
        * <pre>
-       * IPv4 или IPv6 адрес игрока в виде строки
+       * IPv4 или IPv6 адрес игрока в виде строки (отправитель не знает свой IP, поэтому указывает тут пустую строку)
        * </pre>
        *
        * <code>required string ip_address = 3;</code>
@@ -1484,7 +1711,7 @@ public final class SnakesProto {
       }
       /**
        * <pre>
-       * IPv4 или IPv6 адрес игрока в виде строки
+       * IPv4 или IPv6 адрес игрока в виде строки (отправитель не знает свой IP, поэтому указывает тут пустую строку)
        * </pre>
        *
        * <code>required string ip_address = 3;</code>
@@ -1498,7 +1725,7 @@ public final class SnakesProto {
       }
       /**
        * <pre>
-       * IPv4 или IPv6 адрес игрока в виде строки
+       * IPv4 или IPv6 адрес игрока в виде строки (отправитель не знает свой IP, поэтому указывает тут пустую строку)
        * </pre>
        *
        * <code>required string ip_address = 3;</code>
@@ -1684,6 +1911,59 @@ public final class SnakesProto {
         onChanged();
         return this;
       }
+
+      private int score_ ;
+      /**
+       * <pre>
+       * Число очков, которые набрал игрок
+       * </pre>
+       *
+       * <code>required int32 score = 7;</code>
+       * @return Whether the score field is set.
+       */
+      public boolean hasScore() {
+        return ((bitField0_ & 0x00000040) != 0);
+      }
+      /**
+       * <pre>
+       * Число очков, которые набрал игрок
+       * </pre>
+       *
+       * <code>required int32 score = 7;</code>
+       * @return The score.
+       */
+      public int getScore() {
+        return score_;
+      }
+      /**
+       * <pre>
+       * Число очков, которые набрал игрок
+       * </pre>
+       *
+       * <code>required int32 score = 7;</code>
+       * @param value The score to set.
+       * @return This builder for chaining.
+       */
+      public Builder setScore(int value) {
+        bitField0_ |= 0x00000040;
+        score_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       * Число очков, которые набрал игрок
+       * </pre>
+       *
+       * <code>required int32 score = 7;</code>
+       * @return This builder for chaining.
+       */
+      public Builder clearScore() {
+        bitField0_ = (bitField0_ & ~0x00000040);
+        score_ = 0;
+        onChanged();
+        return this;
+      }
       @java.lang.Override
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
@@ -1819,22 +2099,22 @@ public final class SnakesProto {
 
     /**
      * <pre>
-     * Задержка между ходами (сменой состояний) в игре, в миллисекундах
+     * Задержка между ходами (сменой состояний) в игре, в миллисекундах (от 1 до 10000)
      * </pre>
      *
-     * <code>optional int32 delay_ms = 5 [default = 1000];</code>
-     * @return Whether the delayMs field is set.
+     * <code>optional int32 state_delay_ms = 5 [default = 1000];</code>
+     * @return Whether the stateDelayMs field is set.
      */
-    boolean hasDelayMs();
+    boolean hasStateDelayMs();
     /**
      * <pre>
-     * Задержка между ходами (сменой состояний) в игре, в миллисекундах
+     * Задержка между ходами (сменой состояний) в игре, в миллисекундах (от 1 до 10000)
      * </pre>
      *
-     * <code>optional int32 delay_ms = 5 [default = 1000];</code>
-     * @return The delayMs.
+     * <code>optional int32 state_delay_ms = 5 [default = 1000];</code>
+     * @return The stateDelayMs.
      */
-    int getDelayMs();
+    int getStateDelayMs();
 
     /**
      * <pre>
@@ -1854,6 +2134,44 @@ public final class SnakesProto {
      * @return The deadFoodProb.
      */
     float getDeadFoodProb();
+
+    /**
+     * <pre>
+     * Задержка между отправкой ping-сообщений, в миллисекундах (от 1 до 10000)
+     * </pre>
+     *
+     * <code>optional int32 ping_delay_ms = 7 [default = 100];</code>
+     * @return Whether the pingDelayMs field is set.
+     */
+    boolean hasPingDelayMs();
+    /**
+     * <pre>
+     * Задержка между отправкой ping-сообщений, в миллисекундах (от 1 до 10000)
+     * </pre>
+     *
+     * <code>optional int32 ping_delay_ms = 7 [default = 100];</code>
+     * @return The pingDelayMs.
+     */
+    int getPingDelayMs();
+
+    /**
+     * <pre>
+     * Таймаут, после которого считаем что узел-сосед отпал, в миллисекундах (от 1 до 10000)
+     * </pre>
+     *
+     * <code>optional int32 node_timeout_ms = 8 [default = 800];</code>
+     * @return Whether the nodeTimeoutMs field is set.
+     */
+    boolean hasNodeTimeoutMs();
+    /**
+     * <pre>
+     * Таймаут, после которого считаем что узел-сосед отпал, в миллисекундах (от 1 до 10000)
+     * </pre>
+     *
+     * <code>optional int32 node_timeout_ms = 8 [default = 800];</code>
+     * @return The nodeTimeoutMs.
+     */
+    int getNodeTimeoutMs();
   }
   /**
    * <pre>
@@ -1876,8 +2194,10 @@ public final class SnakesProto {
       height_ = 30;
       foodStatic_ = 1;
       foodPerPlayer_ = 1F;
-      delayMs_ = 1000;
+      stateDelayMs_ = 1000;
       deadFoodProb_ = 0.1F;
+      pingDelayMs_ = 100;
+      nodeTimeoutMs_ = 800;
     }
 
     @java.lang.Override
@@ -1933,12 +2253,22 @@ public final class SnakesProto {
             }
             case 40: {
               bitField0_ |= 0x00000010;
-              delayMs_ = input.readInt32();
+              stateDelayMs_ = input.readInt32();
               break;
             }
             case 53: {
               bitField0_ |= 0x00000020;
               deadFoodProb_ = input.readFloat();
+              break;
+            }
+            case 56: {
+              bitField0_ |= 0x00000040;
+              pingDelayMs_ = input.readInt32();
+              break;
+            }
+            case 64: {
+              bitField0_ |= 0x00000080;
+              nodeTimeoutMs_ = input.readInt32();
               break;
             }
             default: {
@@ -2074,29 +2404,29 @@ public final class SnakesProto {
       return foodPerPlayer_;
     }
 
-    public static final int DELAY_MS_FIELD_NUMBER = 5;
-    private int delayMs_;
+    public static final int STATE_DELAY_MS_FIELD_NUMBER = 5;
+    private int stateDelayMs_;
     /**
      * <pre>
-     * Задержка между ходами (сменой состояний) в игре, в миллисекундах
+     * Задержка между ходами (сменой состояний) в игре, в миллисекундах (от 1 до 10000)
      * </pre>
      *
-     * <code>optional int32 delay_ms = 5 [default = 1000];</code>
-     * @return Whether the delayMs field is set.
+     * <code>optional int32 state_delay_ms = 5 [default = 1000];</code>
+     * @return Whether the stateDelayMs field is set.
      */
-    public boolean hasDelayMs() {
+    public boolean hasStateDelayMs() {
       return ((bitField0_ & 0x00000010) != 0);
     }
     /**
      * <pre>
-     * Задержка между ходами (сменой состояний) в игре, в миллисекундах
+     * Задержка между ходами (сменой состояний) в игре, в миллисекундах (от 1 до 10000)
      * </pre>
      *
-     * <code>optional int32 delay_ms = 5 [default = 1000];</code>
-     * @return The delayMs.
+     * <code>optional int32 state_delay_ms = 5 [default = 1000];</code>
+     * @return The stateDelayMs.
      */
-    public int getDelayMs() {
-      return delayMs_;
+    public int getStateDelayMs() {
+      return stateDelayMs_;
     }
 
     public static final int DEAD_FOOD_PROB_FIELD_NUMBER = 6;
@@ -2122,6 +2452,56 @@ public final class SnakesProto {
      */
     public float getDeadFoodProb() {
       return deadFoodProb_;
+    }
+
+    public static final int PING_DELAY_MS_FIELD_NUMBER = 7;
+    private int pingDelayMs_;
+    /**
+     * <pre>
+     * Задержка между отправкой ping-сообщений, в миллисекундах (от 1 до 10000)
+     * </pre>
+     *
+     * <code>optional int32 ping_delay_ms = 7 [default = 100];</code>
+     * @return Whether the pingDelayMs field is set.
+     */
+    public boolean hasPingDelayMs() {
+      return ((bitField0_ & 0x00000040) != 0);
+    }
+    /**
+     * <pre>
+     * Задержка между отправкой ping-сообщений, в миллисекундах (от 1 до 10000)
+     * </pre>
+     *
+     * <code>optional int32 ping_delay_ms = 7 [default = 100];</code>
+     * @return The pingDelayMs.
+     */
+    public int getPingDelayMs() {
+      return pingDelayMs_;
+    }
+
+    public static final int NODE_TIMEOUT_MS_FIELD_NUMBER = 8;
+    private int nodeTimeoutMs_;
+    /**
+     * <pre>
+     * Таймаут, после которого считаем что узел-сосед отпал, в миллисекундах (от 1 до 10000)
+     * </pre>
+     *
+     * <code>optional int32 node_timeout_ms = 8 [default = 800];</code>
+     * @return Whether the nodeTimeoutMs field is set.
+     */
+    public boolean hasNodeTimeoutMs() {
+      return ((bitField0_ & 0x00000080) != 0);
+    }
+    /**
+     * <pre>
+     * Таймаут, после которого считаем что узел-сосед отпал, в миллисекундах (от 1 до 10000)
+     * </pre>
+     *
+     * <code>optional int32 node_timeout_ms = 8 [default = 800];</code>
+     * @return The nodeTimeoutMs.
+     */
+    public int getNodeTimeoutMs() {
+      return nodeTimeoutMs_;
     }
 
     private byte memoizedIsInitialized = -1;
@@ -2151,10 +2531,16 @@ public final class SnakesProto {
         output.writeFloat(4, foodPerPlayer_);
       }
       if (((bitField0_ & 0x00000010) != 0)) {
-        output.writeInt32(5, delayMs_);
+        output.writeInt32(5, stateDelayMs_);
       }
       if (((bitField0_ & 0x00000020) != 0)) {
         output.writeFloat(6, deadFoodProb_);
+      }
+      if (((bitField0_ & 0x00000040) != 0)) {
+        output.writeInt32(7, pingDelayMs_);
+      }
+      if (((bitField0_ & 0x00000080) != 0)) {
+        output.writeInt32(8, nodeTimeoutMs_);
       }
       unknownFields.writeTo(output);
     }
@@ -2183,11 +2569,19 @@ public final class SnakesProto {
       }
       if (((bitField0_ & 0x00000010) != 0)) {
         size += com.google.protobuf.CodedOutputStream
-          .computeInt32Size(5, delayMs_);
+          .computeInt32Size(5, stateDelayMs_);
       }
       if (((bitField0_ & 0x00000020) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeFloatSize(6, deadFoodProb_);
+      }
+      if (((bitField0_ & 0x00000040) != 0)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeInt32Size(7, pingDelayMs_);
+      }
+      if (((bitField0_ & 0x00000080) != 0)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeInt32Size(8, nodeTimeoutMs_);
       }
       size += unknownFields.getSerializedSize();
       memoizedSize = size;
@@ -2225,16 +2619,26 @@ public final class SnakesProto {
             != java.lang.Float.floatToIntBits(
                 other.getFoodPerPlayer())) return false;
       }
-      if (hasDelayMs() != other.hasDelayMs()) return false;
-      if (hasDelayMs()) {
-        if (getDelayMs()
-            != other.getDelayMs()) return false;
+      if (hasStateDelayMs() != other.hasStateDelayMs()) return false;
+      if (hasStateDelayMs()) {
+        if (getStateDelayMs()
+            != other.getStateDelayMs()) return false;
       }
       if (hasDeadFoodProb() != other.hasDeadFoodProb()) return false;
       if (hasDeadFoodProb()) {
         if (java.lang.Float.floatToIntBits(getDeadFoodProb())
             != java.lang.Float.floatToIntBits(
                 other.getDeadFoodProb())) return false;
+      }
+      if (hasPingDelayMs() != other.hasPingDelayMs()) return false;
+      if (hasPingDelayMs()) {
+        if (getPingDelayMs()
+            != other.getPingDelayMs()) return false;
+      }
+      if (hasNodeTimeoutMs() != other.hasNodeTimeoutMs()) return false;
+      if (hasNodeTimeoutMs()) {
+        if (getNodeTimeoutMs()
+            != other.getNodeTimeoutMs()) return false;
       }
       if (!unknownFields.equals(other.unknownFields)) return false;
       return true;
@@ -2264,14 +2668,22 @@ public final class SnakesProto {
         hash = (53 * hash) + java.lang.Float.floatToIntBits(
             getFoodPerPlayer());
       }
-      if (hasDelayMs()) {
-        hash = (37 * hash) + DELAY_MS_FIELD_NUMBER;
-        hash = (53 * hash) + getDelayMs();
+      if (hasStateDelayMs()) {
+        hash = (37 * hash) + STATE_DELAY_MS_FIELD_NUMBER;
+        hash = (53 * hash) + getStateDelayMs();
       }
       if (hasDeadFoodProb()) {
         hash = (37 * hash) + DEAD_FOOD_PROB_FIELD_NUMBER;
         hash = (53 * hash) + java.lang.Float.floatToIntBits(
             getDeadFoodProb());
+      }
+      if (hasPingDelayMs()) {
+        hash = (37 * hash) + PING_DELAY_MS_FIELD_NUMBER;
+        hash = (53 * hash) + getPingDelayMs();
+      }
+      if (hasNodeTimeoutMs()) {
+        hash = (37 * hash) + NODE_TIMEOUT_MS_FIELD_NUMBER;
+        hash = (53 * hash) + getNodeTimeoutMs();
       }
       hash = (29 * hash) + unknownFields.hashCode();
       memoizedHashCode = hash;
@@ -2418,10 +2830,14 @@ public final class SnakesProto {
         bitField0_ = (bitField0_ & ~0x00000004);
         foodPerPlayer_ = 1F;
         bitField0_ = (bitField0_ & ~0x00000008);
-        delayMs_ = 1000;
+        stateDelayMs_ = 1000;
         bitField0_ = (bitField0_ & ~0x00000010);
         deadFoodProb_ = 0.1F;
         bitField0_ = (bitField0_ & ~0x00000020);
+        pingDelayMs_ = 100;
+        bitField0_ = (bitField0_ & ~0x00000040);
+        nodeTimeoutMs_ = 800;
+        bitField0_ = (bitField0_ & ~0x00000080);
         return this;
       }
 
@@ -2469,11 +2885,19 @@ public final class SnakesProto {
         if (((from_bitField0_ & 0x00000010) != 0)) {
           to_bitField0_ |= 0x00000010;
         }
-        result.delayMs_ = delayMs_;
+        result.stateDelayMs_ = stateDelayMs_;
         if (((from_bitField0_ & 0x00000020) != 0)) {
           to_bitField0_ |= 0x00000020;
         }
         result.deadFoodProb_ = deadFoodProb_;
+        if (((from_bitField0_ & 0x00000040) != 0)) {
+          to_bitField0_ |= 0x00000040;
+        }
+        result.pingDelayMs_ = pingDelayMs_;
+        if (((from_bitField0_ & 0x00000080) != 0)) {
+          to_bitField0_ |= 0x00000080;
+        }
+        result.nodeTimeoutMs_ = nodeTimeoutMs_;
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -2535,11 +2959,17 @@ public final class SnakesProto {
         if (other.hasFoodPerPlayer()) {
           setFoodPerPlayer(other.getFoodPerPlayer());
         }
-        if (other.hasDelayMs()) {
-          setDelayMs(other.getDelayMs());
+        if (other.hasStateDelayMs()) {
+          setStateDelayMs(other.getStateDelayMs());
         }
         if (other.hasDeadFoodProb()) {
           setDeadFoodProb(other.getDeadFoodProb());
+        }
+        if (other.hasPingDelayMs()) {
+          setPingDelayMs(other.getPingDelayMs());
+        }
+        if (other.hasNodeTimeoutMs()) {
+          setNodeTimeoutMs(other.getNodeTimeoutMs());
         }
         this.mergeUnknownFields(other.unknownFields);
         onChanged();
@@ -2783,55 +3213,55 @@ public final class SnakesProto {
         return this;
       }
 
-      private int delayMs_ = 1000;
+      private int stateDelayMs_ = 1000;
       /**
        * <pre>
-       * Задержка между ходами (сменой состояний) в игре, в миллисекундах
+       * Задержка между ходами (сменой состояний) в игре, в миллисекундах (от 1 до 10000)
        * </pre>
        *
-       * <code>optional int32 delay_ms = 5 [default = 1000];</code>
-       * @return Whether the delayMs field is set.
+       * <code>optional int32 state_delay_ms = 5 [default = 1000];</code>
+       * @return Whether the stateDelayMs field is set.
        */
-      public boolean hasDelayMs() {
+      public boolean hasStateDelayMs() {
         return ((bitField0_ & 0x00000010) != 0);
       }
       /**
        * <pre>
-       * Задержка между ходами (сменой состояний) в игре, в миллисекундах
+       * Задержка между ходами (сменой состояний) в игре, в миллисекундах (от 1 до 10000)
        * </pre>
        *
-       * <code>optional int32 delay_ms = 5 [default = 1000];</code>
-       * @return The delayMs.
+       * <code>optional int32 state_delay_ms = 5 [default = 1000];</code>
+       * @return The stateDelayMs.
        */
-      public int getDelayMs() {
-        return delayMs_;
+      public int getStateDelayMs() {
+        return stateDelayMs_;
       }
       /**
        * <pre>
-       * Задержка между ходами (сменой состояний) в игре, в миллисекундах
+       * Задержка между ходами (сменой состояний) в игре, в миллисекундах (от 1 до 10000)
        * </pre>
        *
-       * <code>optional int32 delay_ms = 5 [default = 1000];</code>
-       * @param value The delayMs to set.
+       * <code>optional int32 state_delay_ms = 5 [default = 1000];</code>
+       * @param value The stateDelayMs to set.
        * @return This builder for chaining.
        */
-      public Builder setDelayMs(int value) {
+      public Builder setStateDelayMs(int value) {
         bitField0_ |= 0x00000010;
-        delayMs_ = value;
+        stateDelayMs_ = value;
         onChanged();
         return this;
       }
       /**
        * <pre>
-       * Задержка между ходами (сменой состояний) в игре, в миллисекундах
+       * Задержка между ходами (сменой состояний) в игре, в миллисекундах (от 1 до 10000)
        * </pre>
        *
-       * <code>optional int32 delay_ms = 5 [default = 1000];</code>
+       * <code>optional int32 state_delay_ms = 5 [default = 1000];</code>
        * @return This builder for chaining.
        */
-      public Builder clearDelayMs() {
+      public Builder clearStateDelayMs() {
         bitField0_ = (bitField0_ & ~0x00000010);
-        delayMs_ = 1000;
+        stateDelayMs_ = 1000;
         onChanged();
         return this;
       }
@@ -2885,6 +3315,112 @@ public final class SnakesProto {
       public Builder clearDeadFoodProb() {
         bitField0_ = (bitField0_ & ~0x00000020);
         deadFoodProb_ = 0.1F;
+        onChanged();
+        return this;
+      }
+
+      private int pingDelayMs_ = 100;
+      /**
+       * <pre>
+       * Задержка между отправкой ping-сообщений, в миллисекундах (от 1 до 10000)
+       * </pre>
+       *
+       * <code>optional int32 ping_delay_ms = 7 [default = 100];</code>
+       * @return Whether the pingDelayMs field is set.
+       */
+      public boolean hasPingDelayMs() {
+        return ((bitField0_ & 0x00000040) != 0);
+      }
+      /**
+       * <pre>
+       * Задержка между отправкой ping-сообщений, в миллисекундах (от 1 до 10000)
+       * </pre>
+       *
+       * <code>optional int32 ping_delay_ms = 7 [default = 100];</code>
+       * @return The pingDelayMs.
+       */
+      public int getPingDelayMs() {
+        return pingDelayMs_;
+      }
+      /**
+       * <pre>
+       * Задержка между отправкой ping-сообщений, в миллисекундах (от 1 до 10000)
+       * </pre>
+       *
+       * <code>optional int32 ping_delay_ms = 7 [default = 100];</code>
+       * @param value The pingDelayMs to set.
+       * @return This builder for chaining.
+       */
+      public Builder setPingDelayMs(int value) {
+        bitField0_ |= 0x00000040;
+        pingDelayMs_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       * Задержка между отправкой ping-сообщений, в миллисекундах (от 1 до 10000)
+       * </pre>
+       *
+       * <code>optional int32 ping_delay_ms = 7 [default = 100];</code>
+       * @return This builder for chaining.
+       */
+      public Builder clearPingDelayMs() {
+        bitField0_ = (bitField0_ & ~0x00000040);
+        pingDelayMs_ = 100;
+        onChanged();
+        return this;
+      }
+
+      private int nodeTimeoutMs_ = 800;
+      /**
+       * <pre>
+       * Таймаут, после которого считаем что узел-сосед отпал, в миллисекундах (от 1 до 10000)
+       * </pre>
+       *
+       * <code>optional int32 node_timeout_ms = 8 [default = 800];</code>
+       * @return Whether the nodeTimeoutMs field is set.
+       */
+      public boolean hasNodeTimeoutMs() {
+        return ((bitField0_ & 0x00000080) != 0);
+      }
+      /**
+       * <pre>
+       * Таймаут, после которого считаем что узел-сосед отпал, в миллисекундах (от 1 до 10000)
+       * </pre>
+       *
+       * <code>optional int32 node_timeout_ms = 8 [default = 800];</code>
+       * @return The nodeTimeoutMs.
+       */
+      public int getNodeTimeoutMs() {
+        return nodeTimeoutMs_;
+      }
+      /**
+       * <pre>
+       * Таймаут, после которого считаем что узел-сосед отпал, в миллисекундах (от 1 до 10000)
+       * </pre>
+       *
+       * <code>optional int32 node_timeout_ms = 8 [default = 800];</code>
+       * @param value The nodeTimeoutMs to set.
+       * @return This builder for chaining.
+       */
+      public Builder setNodeTimeoutMs(int value) {
+        bitField0_ |= 0x00000080;
+        nodeTimeoutMs_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       * Таймаут, после которого считаем что узел-сосед отпал, в миллисекундах (от 1 до 10000)
+       * </pre>
+       *
+       * <code>optional int32 node_timeout_ms = 8 [default = 800];</code>
+       * @return This builder for chaining.
+       */
+      public Builder clearNodeTimeoutMs() {
+        bitField0_ = (bitField0_ & ~0x00000080);
+        nodeTimeoutMs_ = 800;
         onChanged();
         return this;
       }
@@ -4949,6 +5485,25 @@ public final class SnakesProto {
        * @return The state.
        */
       net.fit.proto.SnakesProto.GameState.Snake.SnakeState getState();
+
+      /**
+       * <pre>
+       * Направление, в котором повёрнута голова змейки в текущий момент
+       * </pre>
+       *
+       * <code>required .snakes.Direction head_direction = 4;</code>
+       * @return Whether the headDirection field is set.
+       */
+      boolean hasHeadDirection();
+      /**
+       * <pre>
+       * Направление, в котором повёрнута голова змейки в текущий момент
+       * </pre>
+       *
+       * <code>required .snakes.Direction head_direction = 4;</code>
+       * @return The headDirection.
+       */
+      net.fit.proto.SnakesProto.Direction getHeadDirection();
     }
     /**
      * <pre>
@@ -4969,6 +5524,7 @@ public final class SnakesProto {
       private Snake() {
         points_ = java.util.Collections.emptyList();
         state_ = 0;
+        headDirection_ = 1;
       }
 
       @java.lang.Override
@@ -5025,6 +5581,18 @@ public final class SnakesProto {
                 } else {
                   bitField0_ |= 0x00000002;
                   state_ = rawValue;
+                }
+                break;
+              }
+              case 32: {
+                int rawValue = input.readEnum();
+                  @SuppressWarnings("deprecation")
+                net.fit.proto.SnakesProto.Direction value = net.fit.proto.SnakesProto.Direction.valueOf(rawValue);
+                if (value == null) {
+                  unknownFields.mergeVarintField(4, rawValue);
+                } else {
+                  bitField0_ |= 0x00000004;
+                  headDirection_ = rawValue;
                 }
                 break;
               }
@@ -5297,6 +5865,33 @@ public final class SnakesProto {
         return result == null ? net.fit.proto.SnakesProto.GameState.Snake.SnakeState.ALIVE : result;
       }
 
+      public static final int HEAD_DIRECTION_FIELD_NUMBER = 4;
+      private int headDirection_;
+      /**
+       * <pre>
+       * Направление, в котором повёрнута голова змейки в текущий момент
+       * </pre>
+       *
+       * <code>required .snakes.Direction head_direction = 4;</code>
+       * @return Whether the headDirection field is set.
+       */
+      public boolean hasHeadDirection() {
+        return ((bitField0_ & 0x00000004) != 0);
+      }
+      /**
+       * <pre>
+       * Направление, в котором повёрнута голова змейки в текущий момент
+       * </pre>
+       *
+       * <code>required .snakes.Direction head_direction = 4;</code>
+       * @return The headDirection.
+       */
+      public net.fit.proto.SnakesProto.Direction getHeadDirection() {
+        @SuppressWarnings("deprecation")
+        net.fit.proto.SnakesProto.Direction result = net.fit.proto.SnakesProto.Direction.valueOf(headDirection_);
+        return result == null ? net.fit.proto.SnakesProto.Direction.UP : result;
+      }
+
       private byte memoizedIsInitialized = -1;
       @java.lang.Override
       public final boolean isInitialized() {
@@ -5309,6 +5904,10 @@ public final class SnakesProto {
           return false;
         }
         if (!hasState()) {
+          memoizedIsInitialized = 0;
+          return false;
+        }
+        if (!hasHeadDirection()) {
           memoizedIsInitialized = 0;
           return false;
         }
@@ -5327,6 +5926,9 @@ public final class SnakesProto {
         }
         if (((bitField0_ & 0x00000002) != 0)) {
           output.writeEnum(3, state_);
+        }
+        if (((bitField0_ & 0x00000004) != 0)) {
+          output.writeEnum(4, headDirection_);
         }
         unknownFields.writeTo(output);
       }
@@ -5348,6 +5950,10 @@ public final class SnakesProto {
         if (((bitField0_ & 0x00000002) != 0)) {
           size += com.google.protobuf.CodedOutputStream
             .computeEnumSize(3, state_);
+        }
+        if (((bitField0_ & 0x00000004) != 0)) {
+          size += com.google.protobuf.CodedOutputStream
+            .computeEnumSize(4, headDirection_);
         }
         size += unknownFields.getSerializedSize();
         memoizedSize = size;
@@ -5375,6 +5981,10 @@ public final class SnakesProto {
         if (hasState()) {
           if (state_ != other.state_) return false;
         }
+        if (hasHeadDirection() != other.hasHeadDirection()) return false;
+        if (hasHeadDirection()) {
+          if (headDirection_ != other.headDirection_) return false;
+        }
         if (!unknownFields.equals(other.unknownFields)) return false;
         return true;
       }
@@ -5397,6 +6007,10 @@ public final class SnakesProto {
         if (hasState()) {
           hash = (37 * hash) + STATE_FIELD_NUMBER;
           hash = (53 * hash) + state_;
+        }
+        if (hasHeadDirection()) {
+          hash = (37 * hash) + HEAD_DIRECTION_FIELD_NUMBER;
+          hash = (53 * hash) + headDirection_;
         }
         hash = (29 * hash) + unknownFields.hashCode();
         memoizedHashCode = hash;
@@ -5546,6 +6160,8 @@ public final class SnakesProto {
           }
           state_ = 0;
           bitField0_ = (bitField0_ & ~0x00000004);
+          headDirection_ = 1;
+          bitField0_ = (bitField0_ & ~0x00000008);
           return this;
         }
 
@@ -5591,6 +6207,10 @@ public final class SnakesProto {
             to_bitField0_ |= 0x00000002;
           }
           result.state_ = state_;
+          if (((from_bitField0_ & 0x00000008) != 0)) {
+            to_bitField0_ |= 0x00000004;
+          }
+          result.headDirection_ = headDirection_;
           result.bitField0_ = to_bitField0_;
           onBuilt();
           return result;
@@ -5672,6 +6292,9 @@ public final class SnakesProto {
           if (other.hasState()) {
             setState(other.getState());
           }
+          if (other.hasHeadDirection()) {
+            setHeadDirection(other.getHeadDirection());
+          }
           this.mergeUnknownFields(other.unknownFields);
           onChanged();
           return this;
@@ -5683,6 +6306,9 @@ public final class SnakesProto {
             return false;
           }
           if (!hasState()) {
+            return false;
+          }
+          if (!hasHeadDirection()) {
             return false;
           }
           return true;
@@ -6163,6 +6789,64 @@ public final class SnakesProto {
         public Builder clearState() {
           bitField0_ = (bitField0_ & ~0x00000004);
           state_ = 0;
+          onChanged();
+          return this;
+        }
+
+        private int headDirection_ = 1;
+        /**
+         * <pre>
+         * Направление, в котором повёрнута голова змейки в текущий момент
+         * </pre>
+         *
+         * <code>required .snakes.Direction head_direction = 4;</code>
+         * @return Whether the headDirection field is set.
+         */
+        public boolean hasHeadDirection() {
+          return ((bitField0_ & 0x00000008) != 0);
+        }
+        /**
+         * <pre>
+         * Направление, в котором повёрнута голова змейки в текущий момент
+         * </pre>
+         *
+         * <code>required .snakes.Direction head_direction = 4;</code>
+         * @return The headDirection.
+         */
+        public net.fit.proto.SnakesProto.Direction getHeadDirection() {
+          @SuppressWarnings("deprecation")
+          net.fit.proto.SnakesProto.Direction result = net.fit.proto.SnakesProto.Direction.valueOf(headDirection_);
+          return result == null ? net.fit.proto.SnakesProto.Direction.UP : result;
+        }
+        /**
+         * <pre>
+         * Направление, в котором повёрнута голова змейки в текущий момент
+         * </pre>
+         *
+         * <code>required .snakes.Direction head_direction = 4;</code>
+         * @param value The headDirection to set.
+         * @return This builder for chaining.
+         */
+        public Builder setHeadDirection(net.fit.proto.SnakesProto.Direction value) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          bitField0_ |= 0x00000008;
+          headDirection_ = value.getNumber();
+          onChanged();
+          return this;
+        }
+        /**
+         * <pre>
+         * Направление, в котором повёрнута голова змейки в текущий момент
+         * </pre>
+         *
+         * <code>required .snakes.Direction head_direction = 4;</code>
+         * @return This builder for chaining.
+         */
+        public Builder clearHeadDirection() {
+          bitField0_ = (bitField0_ & ~0x00000008);
+          headDirection_ = 1;
           onChanged();
           return this;
         }
@@ -8186,7 +8870,7 @@ public final class SnakesProto {
   }
   /**
    * <pre>
-   * Сообщение от одного участника игры другому участнику 
+   * Общий формат любого сообщения
    * </pre>
    *
    * Protobuf type {@code snakes.GameMessage}
@@ -8399,7 +9083,7 @@ public final class SnakesProto {
     }
     /**
      * <pre>
-     * Ничего не меняем, просто говорим что мы живы каждые 100 мс
+     * Ничего не меняем, просто говорим что мы живы с интервалом ping_delay_ms
      * </pre>
      *
      * Protobuf type {@code snakes.GameMessage.PingMsg}
@@ -8624,7 +9308,7 @@ public final class SnakesProto {
       }
       /**
        * <pre>
-       * Ничего не меняем, просто говорим что мы живы каждые 100 мс
+       * Ничего не меняем, просто говорим что мы живы с интервалом ping_delay_ms
        * </pre>
        *
        * Protobuf type {@code snakes.GameMessage.PingMsg}
@@ -8828,7 +9512,7 @@ public final class SnakesProto {
        * Куда повернуть на следующем шаге
        * </pre>
        *
-       * <code>required .snakes.GameMessage.SteerMsg.Direction direction = 1;</code>
+       * <code>required .snakes.Direction direction = 1;</code>
        * @return Whether the direction field is set.
        */
       boolean hasDirection();
@@ -8837,14 +9521,14 @@ public final class SnakesProto {
        * Куда повернуть на следующем шаге
        * </pre>
        *
-       * <code>required .snakes.GameMessage.SteerMsg.Direction direction = 1;</code>
+       * <code>required .snakes.Direction direction = 1;</code>
        * @return The direction.
        */
-      net.fit.proto.SnakesProto.GameMessage.SteerMsg.Direction getDirection();
+      net.fit.proto.SnakesProto.Direction getDirection();
     }
     /**
      * <pre>
-     * Повернуть голову змеи
+     * Не-центральный игрок просит повернуть голову змеи
      * </pre>
      *
      * Protobuf type {@code snakes.GameMessage.SteerMsg}
@@ -8896,7 +9580,7 @@ public final class SnakesProto {
               case 8: {
                 int rawValue = input.readEnum();
                   @SuppressWarnings("deprecation")
-                net.fit.proto.SnakesProto.GameMessage.SteerMsg.Direction value = net.fit.proto.SnakesProto.GameMessage.SteerMsg.Direction.valueOf(rawValue);
+                net.fit.proto.SnakesProto.Direction value = net.fit.proto.SnakesProto.Direction.valueOf(rawValue);
                 if (value == null) {
                   unknownFields.mergeVarintField(1, rawValue);
                 } else {
@@ -8937,152 +9621,6 @@ public final class SnakesProto {
                 net.fit.proto.SnakesProto.GameMessage.SteerMsg.class, net.fit.proto.SnakesProto.GameMessage.SteerMsg.Builder.class);
       }
 
-      /**
-       * Protobuf enum {@code snakes.GameMessage.SteerMsg.Direction}
-       */
-      public enum Direction
-          implements com.google.protobuf.ProtocolMessageEnum {
-        /**
-         * <pre>
-         * Вверх
-         * </pre>
-         *
-         * <code>UP = 1;</code>
-         */
-        UP(1),
-        /**
-         * <pre>
-         * Вниз
-         * </pre>
-         *
-         * <code>DOWN = 2;</code>
-         */
-        DOWN(2),
-        /**
-         * <pre>
-         * Влево
-         * </pre>
-         *
-         * <code>LEFT = 3;</code>
-         */
-        LEFT(3),
-        /**
-         * <pre>
-         * Вправо
-         * </pre>
-         *
-         * <code>RIGHT = 4;</code>
-         */
-        RIGHT(4),
-        ;
-
-        /**
-         * <pre>
-         * Вверх
-         * </pre>
-         *
-         * <code>UP = 1;</code>
-         */
-        public static final int UP_VALUE = 1;
-        /**
-         * <pre>
-         * Вниз
-         * </pre>
-         *
-         * <code>DOWN = 2;</code>
-         */
-        public static final int DOWN_VALUE = 2;
-        /**
-         * <pre>
-         * Влево
-         * </pre>
-         *
-         * <code>LEFT = 3;</code>
-         */
-        public static final int LEFT_VALUE = 3;
-        /**
-         * <pre>
-         * Вправо
-         * </pre>
-         *
-         * <code>RIGHT = 4;</code>
-         */
-        public static final int RIGHT_VALUE = 4;
-
-
-        public final int getNumber() {
-          return value;
-        }
-
-        /**
-         * @param value The numeric wire value of the corresponding enum entry.
-         * @return The enum associated with the given numeric wire value.
-         * @deprecated Use {@link #forNumber(int)} instead.
-         */
-        @java.lang.Deprecated
-        public static Direction valueOf(int value) {
-          return forNumber(value);
-        }
-
-        /**
-         * @param value The numeric wire value of the corresponding enum entry.
-         * @return The enum associated with the given numeric wire value.
-         */
-        public static Direction forNumber(int value) {
-          switch (value) {
-            case 1: return UP;
-            case 2: return DOWN;
-            case 3: return LEFT;
-            case 4: return RIGHT;
-            default: return null;
-          }
-        }
-
-        public static com.google.protobuf.Internal.EnumLiteMap<Direction>
-            internalGetValueMap() {
-          return internalValueMap;
-        }
-        private static final com.google.protobuf.Internal.EnumLiteMap<
-            Direction> internalValueMap =
-              new com.google.protobuf.Internal.EnumLiteMap<Direction>() {
-                public Direction findValueByNumber(int number) {
-                  return Direction.forNumber(number);
-                }
-              };
-
-        public final com.google.protobuf.Descriptors.EnumValueDescriptor
-            getValueDescriptor() {
-          return getDescriptor().getValues().get(ordinal());
-        }
-        public final com.google.protobuf.Descriptors.EnumDescriptor
-            getDescriptorForType() {
-          return getDescriptor();
-        }
-        public static final com.google.protobuf.Descriptors.EnumDescriptor
-            getDescriptor() {
-          return net.fit.proto.SnakesProto.GameMessage.SteerMsg.getDescriptor().getEnumTypes().get(0);
-        }
-
-        private static final Direction[] VALUES = values();
-
-        public static Direction valueOf(
-            com.google.protobuf.Descriptors.EnumValueDescriptor desc) {
-          if (desc.getType() != getDescriptor()) {
-            throw new java.lang.IllegalArgumentException(
-              "EnumValueDescriptor is not for this type.");
-          }
-          return VALUES[desc.getIndex()];
-        }
-
-        private final int value;
-
-        private Direction(int value) {
-          this.value = value;
-        }
-
-        // @@protoc_insertion_point(enum_scope:snakes.GameMessage.SteerMsg.Direction)
-      }
-
       private int bitField0_;
       public static final int DIRECTION_FIELD_NUMBER = 1;
       private int direction_;
@@ -9091,7 +9629,7 @@ public final class SnakesProto {
        * Куда повернуть на следующем шаге
        * </pre>
        *
-       * <code>required .snakes.GameMessage.SteerMsg.Direction direction = 1;</code>
+       * <code>required .snakes.Direction direction = 1;</code>
        * @return Whether the direction field is set.
        */
       public boolean hasDirection() {
@@ -9102,13 +9640,13 @@ public final class SnakesProto {
        * Куда повернуть на следующем шаге
        * </pre>
        *
-       * <code>required .snakes.GameMessage.SteerMsg.Direction direction = 1;</code>
+       * <code>required .snakes.Direction direction = 1;</code>
        * @return The direction.
        */
-      public net.fit.proto.SnakesProto.GameMessage.SteerMsg.Direction getDirection() {
+      public net.fit.proto.SnakesProto.Direction getDirection() {
         @SuppressWarnings("deprecation")
-        net.fit.proto.SnakesProto.GameMessage.SteerMsg.Direction result = net.fit.proto.SnakesProto.GameMessage.SteerMsg.Direction.valueOf(direction_);
-        return result == null ? net.fit.proto.SnakesProto.GameMessage.SteerMsg.Direction.UP : result;
+        net.fit.proto.SnakesProto.Direction result = net.fit.proto.SnakesProto.Direction.valueOf(direction_);
+        return result == null ? net.fit.proto.SnakesProto.Direction.UP : result;
       }
 
       private byte memoizedIsInitialized = -1;
@@ -9276,7 +9814,7 @@ public final class SnakesProto {
       }
       /**
        * <pre>
-       * Повернуть голову змеи
+       * Не-центральный игрок просит повернуть голову змеи
        * </pre>
        *
        * Protobuf type {@code snakes.GameMessage.SteerMsg}
@@ -9441,7 +9979,7 @@ public final class SnakesProto {
          * Куда повернуть на следующем шаге
          * </pre>
          *
-         * <code>required .snakes.GameMessage.SteerMsg.Direction direction = 1;</code>
+         * <code>required .snakes.Direction direction = 1;</code>
          * @return Whether the direction field is set.
          */
         public boolean hasDirection() {
@@ -9452,24 +9990,24 @@ public final class SnakesProto {
          * Куда повернуть на следующем шаге
          * </pre>
          *
-         * <code>required .snakes.GameMessage.SteerMsg.Direction direction = 1;</code>
+         * <code>required .snakes.Direction direction = 1;</code>
          * @return The direction.
          */
-        public net.fit.proto.SnakesProto.GameMessage.SteerMsg.Direction getDirection() {
+        public net.fit.proto.SnakesProto.Direction getDirection() {
           @SuppressWarnings("deprecation")
-          net.fit.proto.SnakesProto.GameMessage.SteerMsg.Direction result = net.fit.proto.SnakesProto.GameMessage.SteerMsg.Direction.valueOf(direction_);
-          return result == null ? net.fit.proto.SnakesProto.GameMessage.SteerMsg.Direction.UP : result;
+          net.fit.proto.SnakesProto.Direction result = net.fit.proto.SnakesProto.Direction.valueOf(direction_);
+          return result == null ? net.fit.proto.SnakesProto.Direction.UP : result;
         }
         /**
          * <pre>
          * Куда повернуть на следующем шаге
          * </pre>
          *
-         * <code>required .snakes.GameMessage.SteerMsg.Direction direction = 1;</code>
+         * <code>required .snakes.Direction direction = 1;</code>
          * @param value The direction to set.
          * @return This builder for chaining.
          */
-        public Builder setDirection(net.fit.proto.SnakesProto.GameMessage.SteerMsg.Direction value) {
+        public Builder setDirection(net.fit.proto.SnakesProto.Direction value) {
           if (value == null) {
             throw new NullPointerException();
           }
@@ -9483,7 +10021,7 @@ public final class SnakesProto {
          * Куда повернуть на следующем шаге
          * </pre>
          *
-         * <code>required .snakes.GameMessage.SteerMsg.Direction direction = 1;</code>
+         * <code>required .snakes.Direction direction = 1;</code>
          * @return This builder for chaining.
          */
         public Builder clearDirection() {
@@ -10004,7 +10542,7 @@ public final class SnakesProto {
     }
     /**
      * <pre>
-     * Сообщаем игрокам состояние игры
+     * Центральный узел сообщает отсальным игрокам состояние игры
      * </pre>
      *
      * Protobuf type {@code snakes.GameMessage.StateMsg}
@@ -10303,7 +10841,7 @@ public final class SnakesProto {
       }
       /**
        * <pre>
-       * Сообщаем игрокам состояние игры
+       * Центральный узел сообщает отсальным игрокам состояние игры
        * </pre>
        *
        * Protobuf type {@code snakes.GameMessage.StateMsg}
@@ -11835,10 +12373,39 @@ public final class SnakesProto {
        * @return The onlyView.
        */
       boolean getOnlyView();
+
+      /**
+       * <pre>
+       * Имя игрока
+       * </pre>
+       *
+       * <code>required string name = 3;</code>
+       * @return Whether the name field is set.
+       */
+      boolean hasName();
+      /**
+       * <pre>
+       * Имя игрока
+       * </pre>
+       *
+       * <code>required string name = 3;</code>
+       * @return The name.
+       */
+      java.lang.String getName();
+      /**
+       * <pre>
+       * Имя игрока
+       * </pre>
+       *
+       * <code>required string name = 3;</code>
+       * @return The bytes for name.
+       */
+      com.google.protobuf.ByteString
+          getNameBytes();
     }
     /**
      * <pre>
-     * Присоединиться к игре
+     * Новый игрок хочет присоединиться к идущей игре
      * </pre>
      *
      * Protobuf type {@code snakes.GameMessage.JoinMsg}
@@ -11854,6 +12421,7 @@ public final class SnakesProto {
       }
       private JoinMsg() {
         playerType_ = 0;
+        name_ = "";
       }
 
       @java.lang.Override
@@ -11902,6 +12470,12 @@ public final class SnakesProto {
               case 16: {
                 bitField0_ |= 0x00000002;
                 onlyView_ = input.readBool();
+                break;
+              }
+              case 26: {
+                com.google.protobuf.ByteString bs = input.readBytes();
+                bitField0_ |= 0x00000004;
+                name_ = bs;
                 break;
               }
               default: {
@@ -11989,6 +12563,63 @@ public final class SnakesProto {
         return onlyView_;
       }
 
+      public static final int NAME_FIELD_NUMBER = 3;
+      private volatile java.lang.Object name_;
+      /**
+       * <pre>
+       * Имя игрока
+       * </pre>
+       *
+       * <code>required string name = 3;</code>
+       * @return Whether the name field is set.
+       */
+      public boolean hasName() {
+        return ((bitField0_ & 0x00000004) != 0);
+      }
+      /**
+       * <pre>
+       * Имя игрока
+       * </pre>
+       *
+       * <code>required string name = 3;</code>
+       * @return The name.
+       */
+      public java.lang.String getName() {
+        java.lang.Object ref = name_;
+        if (ref instanceof java.lang.String) {
+          return (java.lang.String) ref;
+        } else {
+          com.google.protobuf.ByteString bs = 
+              (com.google.protobuf.ByteString) ref;
+          java.lang.String s = bs.toStringUtf8();
+          if (bs.isValidUtf8()) {
+            name_ = s;
+          }
+          return s;
+        }
+      }
+      /**
+       * <pre>
+       * Имя игрока
+       * </pre>
+       *
+       * <code>required string name = 3;</code>
+       * @return The bytes for name.
+       */
+      public com.google.protobuf.ByteString
+          getNameBytes() {
+        java.lang.Object ref = name_;
+        if (ref instanceof java.lang.String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          name_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+
       private byte memoizedIsInitialized = -1;
       @java.lang.Override
       public final boolean isInitialized() {
@@ -11996,6 +12627,10 @@ public final class SnakesProto {
         if (isInitialized == 1) return true;
         if (isInitialized == 0) return false;
 
+        if (!hasName()) {
+          memoizedIsInitialized = 0;
+          return false;
+        }
         memoizedIsInitialized = 1;
         return true;
       }
@@ -12008,6 +12643,9 @@ public final class SnakesProto {
         }
         if (((bitField0_ & 0x00000002) != 0)) {
           output.writeBool(2, onlyView_);
+        }
+        if (((bitField0_ & 0x00000004) != 0)) {
+          com.google.protobuf.GeneratedMessageV3.writeString(output, 3, name_);
         }
         unknownFields.writeTo(output);
       }
@@ -12025,6 +12663,9 @@ public final class SnakesProto {
         if (((bitField0_ & 0x00000002) != 0)) {
           size += com.google.protobuf.CodedOutputStream
             .computeBoolSize(2, onlyView_);
+        }
+        if (((bitField0_ & 0x00000004) != 0)) {
+          size += com.google.protobuf.GeneratedMessageV3.computeStringSize(3, name_);
         }
         size += unknownFields.getSerializedSize();
         memoizedSize = size;
@@ -12050,6 +12691,11 @@ public final class SnakesProto {
           if (getOnlyView()
               != other.getOnlyView()) return false;
         }
+        if (hasName() != other.hasName()) return false;
+        if (hasName()) {
+          if (!getName()
+              .equals(other.getName())) return false;
+        }
         if (!unknownFields.equals(other.unknownFields)) return false;
         return true;
       }
@@ -12069,6 +12715,10 @@ public final class SnakesProto {
           hash = (37 * hash) + ONLY_VIEW_FIELD_NUMBER;
           hash = (53 * hash) + com.google.protobuf.Internal.hashBoolean(
               getOnlyView());
+        }
+        if (hasName()) {
+          hash = (37 * hash) + NAME_FIELD_NUMBER;
+          hash = (53 * hash) + getName().hashCode();
         }
         hash = (29 * hash) + unknownFields.hashCode();
         memoizedHashCode = hash;
@@ -12167,7 +12817,7 @@ public final class SnakesProto {
       }
       /**
        * <pre>
-       * Присоединиться к игре
+       * Новый игрок хочет присоединиться к идущей игре
        * </pre>
        *
        * Protobuf type {@code snakes.GameMessage.JoinMsg}
@@ -12211,6 +12861,8 @@ public final class SnakesProto {
           bitField0_ = (bitField0_ & ~0x00000001);
           onlyView_ = false;
           bitField0_ = (bitField0_ & ~0x00000002);
+          name_ = "";
+          bitField0_ = (bitField0_ & ~0x00000004);
           return this;
         }
 
@@ -12247,6 +12899,10 @@ public final class SnakesProto {
             result.onlyView_ = onlyView_;
             to_bitField0_ |= 0x00000002;
           }
+          if (((from_bitField0_ & 0x00000004) != 0)) {
+            to_bitField0_ |= 0x00000004;
+          }
+          result.name_ = name_;
           result.bitField0_ = to_bitField0_;
           onBuilt();
           return result;
@@ -12302,6 +12958,11 @@ public final class SnakesProto {
           if (other.hasOnlyView()) {
             setOnlyView(other.getOnlyView());
           }
+          if (other.hasName()) {
+            bitField0_ |= 0x00000004;
+            name_ = other.name_;
+            onChanged();
+          }
           this.mergeUnknownFields(other.unknownFields);
           onChanged();
           return this;
@@ -12309,6 +12970,9 @@ public final class SnakesProto {
 
         @java.lang.Override
         public final boolean isInitialized() {
+          if (!hasName()) {
+            return false;
+          }
           return true;
         }
 
@@ -12439,6 +13103,114 @@ public final class SnakesProto {
         public Builder clearOnlyView() {
           bitField0_ = (bitField0_ & ~0x00000002);
           onlyView_ = false;
+          onChanged();
+          return this;
+        }
+
+        private java.lang.Object name_ = "";
+        /**
+         * <pre>
+         * Имя игрока
+         * </pre>
+         *
+         * <code>required string name = 3;</code>
+         * @return Whether the name field is set.
+         */
+        public boolean hasName() {
+          return ((bitField0_ & 0x00000004) != 0);
+        }
+        /**
+         * <pre>
+         * Имя игрока
+         * </pre>
+         *
+         * <code>required string name = 3;</code>
+         * @return The name.
+         */
+        public java.lang.String getName() {
+          java.lang.Object ref = name_;
+          if (!(ref instanceof java.lang.String)) {
+            com.google.protobuf.ByteString bs =
+                (com.google.protobuf.ByteString) ref;
+            java.lang.String s = bs.toStringUtf8();
+            if (bs.isValidUtf8()) {
+              name_ = s;
+            }
+            return s;
+          } else {
+            return (java.lang.String) ref;
+          }
+        }
+        /**
+         * <pre>
+         * Имя игрока
+         * </pre>
+         *
+         * <code>required string name = 3;</code>
+         * @return The bytes for name.
+         */
+        public com.google.protobuf.ByteString
+            getNameBytes() {
+          java.lang.Object ref = name_;
+          if (ref instanceof String) {
+            com.google.protobuf.ByteString b = 
+                com.google.protobuf.ByteString.copyFromUtf8(
+                    (java.lang.String) ref);
+            name_ = b;
+            return b;
+          } else {
+            return (com.google.protobuf.ByteString) ref;
+          }
+        }
+        /**
+         * <pre>
+         * Имя игрока
+         * </pre>
+         *
+         * <code>required string name = 3;</code>
+         * @param value The name to set.
+         * @return This builder for chaining.
+         */
+        public Builder setName(
+            java.lang.String value) {
+          if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000004;
+          name_ = value;
+          onChanged();
+          return this;
+        }
+        /**
+         * <pre>
+         * Имя игрока
+         * </pre>
+         *
+         * <code>required string name = 3;</code>
+         * @return This builder for chaining.
+         */
+        public Builder clearName() {
+          bitField0_ = (bitField0_ & ~0x00000004);
+          name_ = getDefaultInstance().getName();
+          onChanged();
+          return this;
+        }
+        /**
+         * <pre>
+         * Имя игрока
+         * </pre>
+         *
+         * <code>required string name = 3;</code>
+         * @param value The bytes for name to set.
+         * @return This builder for chaining.
+         */
+        public Builder setNameBytes(
+            com.google.protobuf.ByteString value) {
+          if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000004;
+          name_ = value;
           onChanged();
           return this;
         }
@@ -13194,6 +13966,7 @@ public final class SnakesProto {
      * 2. от осознанно выходящего игрока (sender_role = VIEWER)
      * 3. от главного к умершему игроку (receiver_role = VIEWER)
      * 4. в комбинации с 1,2 или отдельно от них: назначение кого-то заместителем (receiver_role = DEPUTY)
+     * 5. в комбинации с 2 от главного узла заместителю о том, что он становится главным (receiver_role = MASTER)
      * </pre>
      *
      * Protobuf type {@code snakes.GameMessage.RoleChangeMsg}
@@ -13519,6 +14292,7 @@ public final class SnakesProto {
        * 2. от осознанно выходящего игрока (sender_role = VIEWER)
        * 3. от главного к умершему игроку (receiver_role = VIEWER)
        * 4. в комбинации с 1,2 или отдельно от них: назначение кого-то заместителем (receiver_role = DEPUTY)
+       * 5. в комбинации с 2 от главного узла заместителю о том, что он становится главным (receiver_role = MASTER)
        * </pre>
        *
        * Protobuf type {@code snakes.GameMessage.RoleChangeMsg}
@@ -14201,6 +14975,12 @@ public final class SnakesProto {
           return false;
         }
       }
+      if (hasJoin()) {
+        if (!getJoin().isInitialized()) {
+          memoizedIsInitialized = 0;
+          return false;
+        }
+      }
       if (hasError()) {
         if (!getError().isInitialized()) {
           memoizedIsInitialized = 0;
@@ -14524,7 +15304,7 @@ public final class SnakesProto {
     }
     /**
      * <pre>
-     * Сообщение от одного участника игры другому участнику 
+     * Общий формат любого сообщения
      * </pre>
      *
      * Protobuf type {@code snakes.GameMessage}
@@ -14786,6 +15566,11 @@ public final class SnakesProto {
         }
         if (hasAnnouncement()) {
           if (!getAnnouncement().isInitialized()) {
+            return false;
+          }
+        }
+        if (hasJoin()) {
+          if (!getJoin().isInitialized()) {
             return false;
           }
         }
@@ -16231,54 +17016,57 @@ public final class SnakesProto {
       descriptor;
   static {
     java.lang.String[] descriptorData = {
-      "\n\014snakes.proto\022\006snakes\"\221\001\n\nGamePlayer\022\014\n" +
+      "\n\014snakes.proto\022\006snakes\"\240\001\n\nGamePlayer\022\014\n" +
       "\004name\030\001 \002(\t\022\n\n\002id\030\002 \002(\005\022\022\n\nip_address\030\003 " +
       "\002(\t\022\014\n\004port\030\004 \002(\005\022\036\n\004role\030\005 \002(\0162\020.snakes" +
       ".NodeRole\022\'\n\004type\030\006 \001(\0162\022.snakes.PlayerT" +
-      "ype:\005HUMAN\"\234\001\n\nGameConfig\022\021\n\005width\030\001 \001(\005" +
-      ":\00240\022\022\n\006height\030\002 \001(\005:\00230\022\026\n\013food_static\030" +
-      "\003 \001(\005:\0011\022\032\n\017food_per_player\030\004 \001(\002:\0011\022\026\n\010" +
-      "delay_ms\030\005 \001(\005:\0041000\022\033\n\016dead_food_prob\030\006" +
-      " \001(\002:\0030.1\"2\n\013GamePlayers\022#\n\007players\030\001 \003(" +
-      "\0132\022.snakes.GamePlayer\"\205\003\n\tGameState\022\023\n\013s" +
-      "tate_order\030\001 \002(\005\022\'\n\006snakes\030\002 \003(\0132\027.snake" +
-      "s.GameState.Snake\022&\n\005foods\030\003 \003(\0132\027.snake" +
-      "s.GameState.Coord\022$\n\007players\030\004 \002(\0132\023.sna" +
-      "kes.GamePlayers\022\"\n\006config\030\005 \002(\0132\022.snakes" +
-      ".GameConfig\032#\n\005Coord\022\014\n\001x\030\001 \001(\021:\0010\022\014\n\001y\030" +
-      "\002 \001(\021:\0010\032\242\001\n\005Snake\022\021\n\tplayer_id\030\001 \002(\005\022\'\n" +
-      "\006points\030\002 \003(\0132\027.snakes.GameState.Coord\0228" +
-      "\n\005state\030\003 \002(\0162\".snakes.GameState.Snake.S" +
-      "nakeState:\005ALIVE\"#\n\nSnakeState\022\t\n\005ALIVE\020" +
-      "\000\022\n\n\006ZOMBIE\020\001\"\343\007\n\013GameMessage\022\017\n\007msg_seq" +
-      "\030\001 \002(\003\022\021\n\tsender_id\030\n \001(\005\022\023\n\013receiver_id" +
-      "\030\013 \001(\005\022+\n\004ping\030\002 \001(\0132\033.snakes.GameMessag" +
-      "e.PingMsgH\000\022-\n\005steer\030\003 \001(\0132\034.snakes.Game" +
-      "Message.SteerMsgH\000\022)\n\003ack\030\004 \001(\0132\032.snakes" +
-      ".GameMessage.AckMsgH\000\022-\n\005state\030\005 \001(\0132\034.s" +
-      "nakes.GameMessage.StateMsgH\000\022;\n\014announce" +
-      "ment\030\006 \001(\0132#.snakes.GameMessage.Announce" +
-      "mentMsgH\000\022+\n\004join\030\007 \001(\0132\033.snakes.GameMes" +
-      "sage.JoinMsgH\000\022-\n\005error\030\010 \001(\0132\034.snakes.G" +
-      "ameMessage.ErrorMsgH\000\0228\n\013role_change\030\t \001" +
-      "(\0132!.snakes.GameMessage.RoleChangeMsgH\000\032" +
-      "\t\n\007PingMsg\032y\n\010SteerMsg\0229\n\tdirection\030\001 \002(" +
-      "\0162&.snakes.GameMessage.SteerMsg.Directio" +
-      "n\"2\n\tDirection\022\006\n\002UP\020\001\022\010\n\004DOWN\020\002\022\010\n\004LEFT" +
-      "\020\003\022\t\n\005RIGHT\020\004\032\010\n\006AckMsg\032,\n\010StateMsg\022 \n\005s" +
-      "tate\030\001 \002(\0132\021.snakes.GameState\032s\n\017Announc" +
-      "ementMsg\022$\n\007players\030\001 \002(\0132\023.snakes.GameP" +
-      "layers\022\"\n\006config\030\002 \002(\0132\022.snakes.GameConf" +
-      "ig\022\026\n\010can_join\030\003 \001(\010:\004true\032S\n\007JoinMsg\022.\n" +
-      "\013player_type\030\001 \001(\0162\022.snakes.PlayerType:\005" +
-      "HUMAN\022\030\n\tonly_view\030\002 \001(\010:\005false\032!\n\010Error" +
-      "Msg\022\025\n\rerror_message\030\001 \002(\t\032_\n\rRoleChange" +
-      "Msg\022%\n\013sender_role\030\001 \001(\0162\020.snakes.NodeRo" +
-      "le\022\'\n\rreceiver_role\030\002 \001(\0162\020.snakes.NodeR" +
-      "oleB\006\n\004Type*:\n\010NodeRole\022\n\n\006NORMAL\020\000\022\n\n\006M" +
-      "ASTER\020\001\022\n\n\006DEPUTY\020\002\022\n\n\006VIEWER\020\003*\"\n\nPlaye" +
-      "rType\022\t\n\005HUMAN\020\000\022\t\n\005ROBOT\020\001B\034\n\rnet.fit.p" +
-      "rotoB\013SnakesProto"
+      "ype:\005HUMAN\022\r\n\005score\030\007 \002(\005\"\334\001\n\nGameConfig" +
+      "\022\021\n\005width\030\001 \001(\005:\00240\022\022\n\006height\030\002 \001(\005:\00230\022" +
+      "\026\n\013food_static\030\003 \001(\005:\0011\022\032\n\017food_per_play" +
+      "er\030\004 \001(\002:\0011\022\034\n\016state_delay_ms\030\005 \001(\005:\004100" +
+      "0\022\033\n\016dead_food_prob\030\006 \001(\002:\0030.1\022\032\n\rping_d" +
+      "elay_ms\030\007 \001(\005:\003100\022\034\n\017node_timeout_ms\030\010 " +
+      "\001(\005:\003800\"2\n\013GamePlayers\022#\n\007players\030\001 \003(\013" +
+      "2\022.snakes.GamePlayer\"\260\003\n\tGameState\022\023\n\013st" +
+      "ate_order\030\001 \002(\005\022\'\n\006snakes\030\002 \003(\0132\027.snakes" +
+      ".GameState.Snake\022&\n\005foods\030\003 \003(\0132\027.snakes" +
+      ".GameState.Coord\022$\n\007players\030\004 \002(\0132\023.snak" +
+      "es.GamePlayers\022\"\n\006config\030\005 \002(\0132\022.snakes." +
+      "GameConfig\032#\n\005Coord\022\014\n\001x\030\001 \001(\021:\0010\022\014\n\001y\030\002" +
+      " \001(\021:\0010\032\315\001\n\005Snake\022\021\n\tplayer_id\030\001 \002(\005\022\'\n\006" +
+      "points\030\002 \003(\0132\027.snakes.GameState.Coord\0228\n" +
+      "\005state\030\003 \002(\0162\".snakes.GameState.Snake.Sn" +
+      "akeState:\005ALIVE\022)\n\016head_direction\030\004 \002(\0162" +
+      "\021.snakes.Direction\"#\n\nSnakeState\022\t\n\005ALIV" +
+      "E\020\000\022\n\n\006ZOMBIE\020\001\"\250\007\n\013GameMessage\022\017\n\007msg_s" +
+      "eq\030\001 \002(\003\022\021\n\tsender_id\030\n \001(\005\022\023\n\013receiver_" +
+      "id\030\013 \001(\005\022+\n\004ping\030\002 \001(\0132\033.snakes.GameMess" +
+      "age.PingMsgH\000\022-\n\005steer\030\003 \001(\0132\034.snakes.Ga" +
+      "meMessage.SteerMsgH\000\022)\n\003ack\030\004 \001(\0132\032.snak" +
+      "es.GameMessage.AckMsgH\000\022-\n\005state\030\005 \001(\0132\034" +
+      ".snakes.GameMessage.StateMsgH\000\022;\n\014announ" +
+      "cement\030\006 \001(\0132#.snakes.GameMessage.Announ" +
+      "cementMsgH\000\022+\n\004join\030\007 \001(\0132\033.snakes.GameM" +
+      "essage.JoinMsgH\000\022-\n\005error\030\010 \001(\0132\034.snakes" +
+      ".GameMessage.ErrorMsgH\000\0228\n\013role_change\030\t" +
+      " \001(\0132!.snakes.GameMessage.RoleChangeMsgH" +
+      "\000\032\t\n\007PingMsg\0320\n\010SteerMsg\022$\n\tdirection\030\001 " +
+      "\002(\0162\021.snakes.Direction\032\010\n\006AckMsg\032,\n\010Stat" +
+      "eMsg\022 \n\005state\030\001 \002(\0132\021.snakes.GameState\032s" +
+      "\n\017AnnouncementMsg\022$\n\007players\030\001 \002(\0132\023.sna" +
+      "kes.GamePlayers\022\"\n\006config\030\002 \002(\0132\022.snakes" +
+      ".GameConfig\022\026\n\010can_join\030\003 \001(\010:\004true\032a\n\007J" +
+      "oinMsg\022.\n\013player_type\030\001 \001(\0162\022.snakes.Pla" +
+      "yerType:\005HUMAN\022\030\n\tonly_view\030\002 \001(\010:\005false" +
+      "\022\014\n\004name\030\003 \002(\t\032!\n\010ErrorMsg\022\025\n\rerror_mess" +
+      "age\030\001 \002(\t\032_\n\rRoleChangeMsg\022%\n\013sender_rol" +
+      "e\030\001 \001(\0162\020.snakes.NodeRole\022\'\n\rreceiver_ro" +
+      "le\030\002 \001(\0162\020.snakes.NodeRoleB\006\n\004Type*:\n\010No" +
+      "deRole\022\n\n\006NORMAL\020\000\022\n\n\006MASTER\020\001\022\n\n\006DEPUTY" +
+      "\020\002\022\n\n\006VIEWER\020\003*\"\n\nPlayerType\022\t\n\005HUMAN\020\000\022" +
+      "\t\n\005ROBOT\020\001*2\n\tDirection\022\006\n\002UP\020\001\022\010\n\004DOWN\020" +
+      "\002\022\010\n\004LEFT\020\003\022\t\n\005RIGHT\020\004B\034\n\rnet.fit.protoB" +
+      "\013SnakesProto"
     };
     descriptor = com.google.protobuf.Descriptors.FileDescriptor
       .internalBuildGeneratedFileFrom(descriptorData,
@@ -16289,13 +17077,13 @@ public final class SnakesProto {
     internal_static_snakes_GamePlayer_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_snakes_GamePlayer_descriptor,
-        new java.lang.String[] { "Name", "Id", "IpAddress", "Port", "Role", "Type", });
+        new java.lang.String[] { "Name", "Id", "IpAddress", "Port", "Role", "Type", "Score", });
     internal_static_snakes_GameConfig_descriptor =
       getDescriptor().getMessageTypes().get(1);
     internal_static_snakes_GameConfig_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_snakes_GameConfig_descriptor,
-        new java.lang.String[] { "Width", "Height", "FoodStatic", "FoodPerPlayer", "DelayMs", "DeadFoodProb", });
+        new java.lang.String[] { "Width", "Height", "FoodStatic", "FoodPerPlayer", "StateDelayMs", "DeadFoodProb", "PingDelayMs", "NodeTimeoutMs", });
     internal_static_snakes_GamePlayers_descriptor =
       getDescriptor().getMessageTypes().get(2);
     internal_static_snakes_GamePlayers_fieldAccessorTable = new
@@ -16319,7 +17107,7 @@ public final class SnakesProto {
     internal_static_snakes_GameState_Snake_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_snakes_GameState_Snake_descriptor,
-        new java.lang.String[] { "PlayerId", "Points", "State", });
+        new java.lang.String[] { "PlayerId", "Points", "State", "HeadDirection", });
     internal_static_snakes_GameMessage_descriptor =
       getDescriptor().getMessageTypes().get(4);
     internal_static_snakes_GameMessage_fieldAccessorTable = new
@@ -16361,7 +17149,7 @@ public final class SnakesProto {
     internal_static_snakes_GameMessage_JoinMsg_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_snakes_GameMessage_JoinMsg_descriptor,
-        new java.lang.String[] { "PlayerType", "OnlyView", });
+        new java.lang.String[] { "PlayerType", "OnlyView", "Name", });
     internal_static_snakes_GameMessage_ErrorMsg_descriptor =
       internal_static_snakes_GameMessage_descriptor.getNestedTypes().get(6);
     internal_static_snakes_GameMessage_ErrorMsg_fieldAccessorTable = new
