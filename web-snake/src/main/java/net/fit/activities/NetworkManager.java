@@ -27,7 +27,7 @@ public class NetworkManager implements Runnable {
     private final DatagramSocket socket;
     private final GameModel model;
 
-    private synchronized long getSequenceNum() {
+    synchronized long getSequenceNum() {
         return sequenceNum++;
     }
 
@@ -81,7 +81,7 @@ public class NetworkManager implements Runnable {
                     }
                     lock = Boolean.FALSE;
                 } catch (InterruptedException e) {
-                    e.printStackTrace();
+                    System.out.println("Ping thread interrupted");
                 }
             }
         }

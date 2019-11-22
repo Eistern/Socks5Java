@@ -13,6 +13,7 @@ import java.net.InetAddress;
 public class AnnouncementActivity implements Runnable {
     private final DatagramSocket socket;
     private final GameModel model;
+    private final NetworkManager networkManager;
 
     @Override
     public void run() {
@@ -24,9 +25,12 @@ public class AnnouncementActivity implements Runnable {
             packet.setPort(9192);
             builder.setConfig(model.getConfig());
             while (true) {
-                builder.setCanJoin(model.canJoin());
+                //IF NEED CAN_JOIN, ADD builder.setCanJoin(model.canJoin()); (not recommended)
                 builder.setPlayers(model.getPlayers());
-                byte[] data = builder.build().toByteArray();
+                byte[] data = SnakesProto.GameMessage.newBuilder()
+                            .setAnnouncement(builder.build())
+                            .setMsgSeq(networkManager.getSequenceNum())
+                            .build().toByteArray();
                 packet.setData(data);
                 packet.setLength(data.length);
                 socket.send(packet);
