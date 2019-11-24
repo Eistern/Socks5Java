@@ -8,6 +8,7 @@ import net.fit.proto.SnakesProto;
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
+import java.net.SocketAddress;
 import java.util.Date;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -17,6 +18,7 @@ public class NetworkManager implements Runnable {
     @AllArgsConstructor
     private static class Message {
         private SnakesProto.GameMessage message;
+        private SocketAddress address;
         private long sequence;
         private Date timestamp;
     }
@@ -31,8 +33,8 @@ public class NetworkManager implements Runnable {
         return sequenceNum++;
     }
 
-    public void commit(SnakesProto.GameMessage message) throws InterruptedException {
-        messageQueue.put(new Message(message, 0, null));
+    public void commit(SnakesProto.GameMessage message, SocketAddress address) throws InterruptedException {
+        messageQueue.put(new Message(message, address, 0, null));
     }
 
     public void confirm(long sequence) {
@@ -50,7 +52,7 @@ public class NetworkManager implements Runnable {
                 byte[] data = nextMessage.message.toBuilder().setMsgSeq(nextMessage.sequence).build().toByteArray();
                 packet.setData(data);
                 packet.setLength(data.length);
-                packet.setSocketAddress(model.getHost());
+                packet.setSocketAddress(nextMessage.address);
                 socket.send(packet);
                 pingActivity.notifyMessage();
             } catch (InterruptedException | IOException e) {
@@ -77,7 +79,7 @@ public class NetworkManager implements Runnable {
                 try {
                     lock.wait(model.getConfig().getPingDelayMs());
                     if (!lock) {
-                        commit(msgBuilder.build());
+                        commit(msgBuilder.build(), model.getHost());
                     }
                     lock = Boolean.FALSE;
                 } catch (InterruptedException e) {

@@ -39,8 +39,9 @@ public class SocketListener implements Runnable {
                 switch (receivedPacket.getPacketType()) {
                     case MESSAGE:
                         if (!nodes.ackMessage((Message) receivedPacket.getData(), address)) {
-                            System.out.println(((Message) receivedPacket.getData()).getPrintingRep());
-                            manager.addMessage((Message) receivedPacket.getData(), new InetSocketAddress(received.getAddress(), received.getPort()));
+                            Message message = (Message) receivedPacket.getData();
+                            System.out.println(message.getPrintingRep());
+                            manager.addMessage(message, new InetSocketAddress(received.getAddress(), received.getPort()));
                         }
                         break;
                     case CONNECT_NODE:

@@ -2,12 +2,14 @@ package net.fit.activities;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
+import net.fit.AnnouncementHolder;
 import net.fit.GameModel;
 import net.fit.proto.SnakesProto;
 
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.InetAddress;
+import java.net.InetSocketAddress;
 import java.net.MulticastSocket;
 import java.util.HashMap;
 import java.util.Map;
@@ -17,6 +19,7 @@ public class DatagramListener implements Runnable {
     private final GameModel model;
     private final NetworkManager networkManager;
     private final MulticastSocket socket;
+    private final AnnouncementHolder announcementHolder;
     @Getter private Map<Integer, SnakesProto.Direction> recentDirections = new HashMap<>();
 
     @Override
@@ -34,6 +37,17 @@ public class DatagramListener implements Runnable {
                 socket.receive(packet);
                 message = SnakesProto.GameMessage.parseFrom(packet.getData());
                 switch (message.getTypeCase()) {
+                    case ANNOUNCEMENT:
+                        announcementHolder.addAnnouncement(message.getAnnouncement(), (InetSocketAddress) packet.getSocketAddress());
+                        break;
+                    case JOIN:
+                        if (!model.canJoin()) {
+                            networkManager.commit(SnakesProto.GameMessage.newBuilder().
+                                    setError(SnakesProto.GameMessage.ErrorMsg.newBuilder()
+                                            .setErrorMessage("Filed is full")
+                                            .build())
+                                    .build(), packet.getSocketAddress());
+                        }
                     case ACK:
                         networkManager.confirm(message.getMsgSeq());
                         break;
@@ -47,7 +61,7 @@ public class DatagramListener implements Runnable {
                     default:
                         System.err.println("Received unknown type :" + message);
                 }
-            } catch (IOException e) {
+            } catch (IOException | InterruptedException e) {
                 e.printStackTrace();
             }
         }
