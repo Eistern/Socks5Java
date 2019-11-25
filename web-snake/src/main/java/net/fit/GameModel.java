@@ -33,9 +33,14 @@ public class GameModel {
 
         players.add(playerBuilder.build());
         builder.setPlayers(SnakesProto.GamePlayers.newBuilder().addAllPlayers(players));
-        builder.setSnakes(0, SnakesProto.GameState.Snake.getDefaultInstance());
+        builder.addSnakes(SnakesProto.GameState.Snake.newBuilder()
+                .setPlayerId(0)
+                .setState(SnakesProto.GameState.Snake.SnakeState.ALIVE)
+                .setHeadDirection(SnakesProto.Direction.RIGHT)
+                .build());
 
         builder.setStateOrder(0);
+        builder.setConfig(config);
         this.state = builder.build();
     }
 
@@ -46,7 +51,7 @@ public class GameModel {
 
     public boolean canJoin() {
         List<SnakesProto.GameState.Snake> snakes = getState().getSnakesList();
-        boolean[][] field = generateBoolFiled(snakes, FillType.FILED);
+        boolean[][] field = generateBoolField(snakes, FillType.FIELD);
 
         for (int x = 0; x < config.getHeight(); x++) {
             for (int y = 0; y < config.getWidth(); y++) {
@@ -61,10 +66,10 @@ public class GameModel {
     }
 
     private enum FillType {
-        STRICT, FILED
+        STRICT, FIELD
     }
 
-    private boolean[][] generateBoolFiled(List<SnakesProto.GameState.Snake> snakes, FillType type) {
+    private boolean[][] generateBoolField(List<SnakesProto.GameState.Snake> snakes, FillType type) {
         boolean[][] field = new boolean[config.getHeight()][config.getWidth()];
         int i, j, xFrom, xTo, yFrom, yTo;
         boolean invertX = false, invertY = false;
@@ -105,23 +110,19 @@ public class GameModel {
         return field;
     }
 
-    private boolean fill(boolean[][] field, int x, int y, FillType type) {
+    private void fill(boolean[][] field, int x, int y, FillType type) {
         int maxX = config.getWidth();
         int maxY = config.getHeight();
-        boolean result = false;
-        if (type == FillType.FILED) {
+        if (type == FillType.FIELD) {
             for (int i = x - 2; i <= x + 2; i++) {
                 for (int j = y - 2; j <= y + 2; j++) {
-                    result = field[(maxY + j) % maxY][(maxX + i) % maxX];
                     field[(maxY + j) % maxY][(maxX + i) % maxX] = true;
                 }
             }
         }
         else {
-            result = field[(maxY + y) % maxY][(maxX + x) % maxX];
             field[(maxY + y) % maxY][(maxX + x) % maxX] = true;
         }
-        return result;
     }
 
     public SnakesProto.GamePlayers getPlayers() {
@@ -285,7 +286,7 @@ public class GameModel {
         });
 
         //Проверка на столкновение "голова-тело"
-        boolean[][] contestField = generateBoolFiled(snakes, FillType.STRICT);
+        boolean[][] contestField = generateBoolField(snakes, FillType.STRICT);
         for (int i = 0; i < config.getHeight(); i++) {
             for (int j = 0; j < config.getWidth(); j++) {
                 if (contestField[(maxY + i) % maxY][(maxX + j) % maxX] && (
@@ -356,7 +357,7 @@ public class GameModel {
         //Генерируем недостающую еду
         int foodX, foodY;
         if (food.size() < config.getFoodStatic() + config.getFoodPerPlayer() * state.getPlayers().getPlayersCount()) {
-            contestField = generateBoolFiled(snakes, FillType.STRICT);
+            contestField = generateBoolField(snakes, FillType.STRICT);
             while (food.size() < config.getFoodStatic() + config.getFoodPerPlayer() * state.getPlayers().getPlayersCount()) {
                 foodX = (int) (Math.random() * maxX);
                 foodY = (int) (Math.random() * maxY);

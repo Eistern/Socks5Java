@@ -29,7 +29,7 @@ class JListHolder {
             String description = address + ":" + port + " [" + x + " * " + y + "]";
             dataArray.add(description + (announcement.hasCanJoin() ? " [" + announcement.getCanJoin() + "]" : ""));
         }
-        jList.setListData((String[]) dataArray.toArray());
+        jList.setListData(dataArray.toArray(new String[0]));
     }
 
     synchronized SocketAddress getOrigin(int ind) {

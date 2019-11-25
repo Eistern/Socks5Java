@@ -11,8 +11,10 @@ public class AnnouncementHolder {
     private List<SnakesProto.GameMessage.AnnouncementMsg> announcements = new ArrayList<>();
 
     public synchronized void addAnnouncement(SnakesProto.GameMessage.AnnouncementMsg announcementMsg, InetSocketAddress origin) {
-        announcements.add(announcementMsg);
-        origins.add(origin);
+        if (!announcements.contains(announcementMsg)) {
+            announcements.add(announcementMsg);
+            origins.add(origin);
+        }
     }
 
     public synchronized List<SnakesProto.GameMessage.AnnouncementMsg> getAnnouncements() {

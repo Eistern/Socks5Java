@@ -40,6 +40,7 @@ public class ConfigService {
                             }
                         }
                     });
+                    config = builder.build();
                 }
             }
         }

@@ -29,7 +29,7 @@ public class NetworkManager implements Runnable {
     private final DatagramSocket socket;
     private final GameModel model;
 
-    synchronized long getSequenceNum() {
+    public synchronized long getSequenceNum() {
         return sequenceNum++;
     }
 
@@ -65,8 +65,10 @@ public class NetworkManager implements Runnable {
         private Boolean lock = Boolean.FALSE;
 
         void notifyMessage() {
-            lock = Boolean.TRUE;
-            lock.notify();
+            synchronized (lock) {
+                lock = Boolean.TRUE;
+                lock.notify();
+            }
         }
 
         @Override
@@ -77,11 +79,13 @@ public class NetworkManager implements Runnable {
 
             while (true) {
                 try {
-                    lock.wait(model.getConfig().getPingDelayMs());
-                    if (!lock) {
-                        commit(msgBuilder.build(), model.getHost());
+                    synchronized (lock) {
+                        lock.wait(model.getConfig().getPingDelayMs());
+                        if (!lock) {
+                            commit(msgBuilder.build(), model.getHost());
+                        }
+                        lock = Boolean.FALSE;
                     }
-                    lock = Boolean.FALSE;
                 } catch (InterruptedException e) {
                     System.out.println("Ping thread interrupted");
                 }

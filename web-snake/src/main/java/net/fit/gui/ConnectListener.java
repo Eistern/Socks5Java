@@ -16,6 +16,8 @@ public class ConnectListener implements ActionListener {
     @Override
     public void actionPerformed(ActionEvent e) {
         int ind = listHolder.getJList().getSelectedIndex();
+        if (ind == -1)
+            return;
         SocketAddress originAddress = listHolder.getOrigin(ind);
         try {
             networkManager.commit(SnakesProto.GameMessage.newBuilder().setJoin(
@@ -24,6 +26,7 @@ public class ConnectListener implements ActionListener {
                             .setPlayerType(SnakesProto.PlayerType.HUMAN)
                             .setName("Eistern")
                             .build())
+                    .setMsgSeq(networkManager.getSequenceNum())
                     .build(), originAddress);
         } catch (InterruptedException ex) {
             ex.printStackTrace();

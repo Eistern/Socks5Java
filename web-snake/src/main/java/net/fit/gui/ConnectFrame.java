@@ -1,5 +1,8 @@
 package net.fit.gui;
 
+import net.fit.AnnouncementHolder;
+import net.fit.activities.NetworkManager;
+
 import javax.swing.*;
 import java.awt.*;
 
@@ -8,7 +11,7 @@ public class ConnectFrame extends JFrame {
     private JButton refreshButton;
     private JButton connectButton;
 
-    public ConnectFrame() {
+    public ConnectFrame(NetworkManager manager, AnnouncementHolder datagramAnnouncement) {
         super("Current Games");
 
         JPanel pnPanel0 = new JPanel();
@@ -28,7 +31,9 @@ public class ConnectFrame extends JFrame {
         gbPanel0.setConstraints(gameList.getJList(), gbcPanel0);
         pnPanel0.add(gameList.getJList());
 
+        RefreshGamesListener refreshListener = new RefreshGamesListener(datagramAnnouncement, gameList);
         refreshButton = new JButton("Refresh");
+        refreshButton.addActionListener(refreshListener);
         gbcPanel0.gridx = 18;
         gbcPanel0.gridy = 0;
         gbcPanel0.gridwidth = 1;
@@ -56,7 +61,9 @@ public class ConnectFrame extends JFrame {
         gbPanel0.setConstraints(pnPanel1, gbcPanel0);
         pnPanel0.add(pnPanel1);
 
+        ConnectListener connectListener = new ConnectListener(gameList, manager);
         connectButton = new JButton("Connect");
+        connectButton.addActionListener(connectListener);
         gbcPanel0.gridx = 0;
         gbcPanel0.gridy = 15;
         gbcPanel0.gridwidth = 20;

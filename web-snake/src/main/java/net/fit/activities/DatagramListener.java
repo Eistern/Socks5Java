@@ -11,6 +11,7 @@ import java.net.DatagramPacket;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.MulticastSocket;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -35,19 +36,21 @@ public class DatagramListener implements Runnable {
         while (true) {
             try {
                 socket.receive(packet);
-                message = SnakesProto.GameMessage.parseFrom(packet.getData());
+                message = SnakesProto.GameMessage.parseFrom(Arrays.copyOf(packet.getData(), packet.getLength()));
                 switch (message.getTypeCase()) {
                     case ANNOUNCEMENT:
+                        System.out.println("Got announce");
                         announcementHolder.addAnnouncement(message.getAnnouncement(), (InetSocketAddress) packet.getSocketAddress());
                         break;
                     case JOIN:
                         if (!model.canJoin()) {
                             networkManager.commit(SnakesProto.GameMessage.newBuilder().
                                     setError(SnakesProto.GameMessage.ErrorMsg.newBuilder()
-                                            .setErrorMessage("Filed is full")
+                                            .setErrorMessage("Field is full")
                                             .build())
                                     .build(), packet.getSocketAddress());
                         }
+                        System.out.println("JOIN received");
                     case ACK:
                         networkManager.confirm(message.getMsgSeq());
                         break;
