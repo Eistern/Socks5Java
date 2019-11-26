@@ -26,7 +26,7 @@ class JListHolder {
             int y = announcement.getConfig().getHeight();
             String address = addressesList.get(i).getHostName();
             int port = addressesList.get(i).getPort();
-            String description = address + ":" + port + " [" + x + " * " + y + "]";
+            String description = address + ":" + port + " [" + x + " * " + y + "] " + announcement.getPlayers().getPlayersCount() + "player(s)";
             dataArray.add(description + (announcement.hasCanJoin() ? " [" + announcement.getCanJoin() + "]" : ""));
         }
         jList.setListData(dataArray.toArray(new String[0]));

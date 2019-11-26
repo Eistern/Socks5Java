@@ -12,6 +12,7 @@ import java.net.SocketAddress;
 import java.util.Date;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 @RequiredArgsConstructor
 public class NetworkManager implements Runnable {
@@ -62,11 +63,11 @@ public class NetworkManager implements Runnable {
     }
 
     public class PingActivity implements Runnable {
-        private Boolean lock = Boolean.FALSE;
+        private final AtomicBoolean lock = new AtomicBoolean(false);
 
         void notifyMessage() {
             synchronized (lock) {
-                lock = Boolean.TRUE;
+                lock.set(true);
                 lock.notify();
             }
         }
@@ -81,10 +82,10 @@ public class NetworkManager implements Runnable {
                 try {
                     synchronized (lock) {
                         lock.wait(model.getConfig().getPingDelayMs());
-                        if (!lock) {
+                        if (!lock.get()) {
                             commit(msgBuilder.build(), model.getHost());
                         }
-                        lock = Boolean.FALSE;
+                        lock.set(false);
                     }
                 } catch (InterruptedException e) {
                     System.out.println("Ping thread interrupted");
