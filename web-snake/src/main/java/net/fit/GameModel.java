@@ -17,27 +17,12 @@ public class GameModel {
     private int freeX;
     private int freeY;
 
-    public void init(SnakesProto.GameConfig config, String name, int port) {
+    public void init(SnakesProto.GameConfig config) {
         this.config = config;
         SnakesProto.GameState.Builder builder = SnakesProto.GameState.newBuilder();
 
         List<SnakesProto.GamePlayer> players = new ArrayList<>();
-        SnakesProto.GamePlayer.Builder playerBuilder = SnakesProto.GamePlayer.newBuilder();
-        playerBuilder.setId(0)
-            .setIpAddress("")
-            .setName(name)
-            .setPort(port)
-            .setScore(0)
-            .setRole(SnakesProto.NodeRole.MASTER)
-            .setType(SnakesProto.PlayerType.HUMAN);
-
-        players.add(playerBuilder.build());
         builder.setPlayers(SnakesProto.GamePlayers.newBuilder().addAllPlayers(players));
-        builder.addSnakes(SnakesProto.GameState.Snake.newBuilder()
-                .setPlayerId(0)
-                .setState(SnakesProto.GameState.Snake.SnakeState.ALIVE)
-                .setHeadDirection(SnakesProto.Direction.RIGHT)
-                .build());
 
         builder.setStateOrder(0);
         builder.setConfig(config);

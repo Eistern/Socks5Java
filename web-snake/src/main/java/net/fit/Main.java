@@ -12,7 +12,7 @@ public class Main {
     public static void main(String[] args) throws IOException, ClassNotFoundException {
         GameModel model = new GameModel();
         MulticastSocket multicastSocket = new MulticastSocket(9192);
-        model.init(ConfigService.getSystemConfig(), "Esitern", 9192);
+        model.init(ConfigService.getSystemConfig());
         AnnouncementHolder datagramAnnouncements = new AnnouncementHolder();
         NetworkManager networkManager = new NetworkManager(multicastSocket, model);
         DatagramListener datagramListener = new DatagramListener(model, networkManager, multicastSocket, datagramAnnouncements);
