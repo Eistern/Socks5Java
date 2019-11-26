@@ -3,7 +3,7 @@ package net.fit;
 import net.fit.activities.AnnouncementActivity;
 import net.fit.activities.DatagramListener;
 import net.fit.activities.NetworkManager;
-import net.fit.gui.ConnectFrame;
+import net.fit.gui.connection.ConnectFrame;
 
 import java.io.IOException;
 import java.net.MulticastSocket;

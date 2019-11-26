@@ -1,4 +1,4 @@
-package net.fit.gui;
+package net.fit.gui.connection;
 
 import net.fit.AnnouncementHolder;
 import net.fit.activities.NetworkManager;

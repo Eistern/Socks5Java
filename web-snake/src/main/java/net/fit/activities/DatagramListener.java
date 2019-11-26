@@ -4,6 +4,7 @@ import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import net.fit.AnnouncementHolder;
 import net.fit.GameModel;
+import net.fit.gui.error.ErrorBox;
 import net.fit.proto.SnakesProto;
 
 import java.io.IOException;
@@ -64,6 +65,9 @@ public class DatagramListener implements Runnable {
                     case STEER:
                         int id = model.idByIpAndPort(packet.getAddress().getHostName(), packet.getPort());
                         recentDirections.put(id, message.getSteer().getDirection());
+                    case ERROR:
+                        ErrorBox.showError(message.getError().getErrorMessage());
+                        break;
                     case TYPE_NOT_SET:
                     default:
                         System.err.println("Received unknown type :" + message);
