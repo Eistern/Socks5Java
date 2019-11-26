@@ -43,12 +43,16 @@ public class DatagramListener implements Runnable {
                         announcementHolder.addAnnouncement(message.getAnnouncement(), (InetSocketAddress) packet.getSocketAddress());
                         break;
                     case JOIN:
-                        if (!model.canJoin()) {
-                            networkManager.commit(SnakesProto.GameMessage.newBuilder().
-                                    setError(SnakesProto.GameMessage.ErrorMsg.newBuilder()
-                                            .setErrorMessage("Field is full")
+                        if (!model.canJoin(packet.getAddress().getHostAddress(), packet.getPort())) {
+                            networkManager.commit(SnakesProto.GameMessage.newBuilder()
+                                    .setError(SnakesProto.GameMessage.ErrorMsg.newBuilder()
+                                            .setErrorMessage("Field is full OR you have already joined")
                                             .build())
+                                    .setMsgSeq(networkManager.getSequenceNum())
                                     .build(), packet.getSocketAddress());
+                        }
+                        else {
+                            model.addPlayer(message.getJoin().getName(), packet.getPort(), packet.getAddress().getHostAddress());
                         }
                         System.out.println("JOIN received");
                     case ACK:

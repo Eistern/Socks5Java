@@ -49,7 +49,13 @@ public class GameModel {
         config = old.getConfig();
     }
 
-    public boolean canJoin() {
+    public boolean canJoin(String ip, int port) {
+        List<SnakesProto.GamePlayer> players = new ArrayList<>(state.getPlayers().getPlayersList());
+        for (SnakesProto.GamePlayer player : players) {
+            if (player.getIpAddress().equals(ip) && player.getPort() == port)
+                return false;
+        }
+
         List<SnakesProto.GameState.Snake> snakes = getState().getSnakesList();
         boolean[][] field = generateBoolField(snakes, FillType.FIELD);
 
@@ -138,9 +144,20 @@ public class GameModel {
         return null;
     }
 
-    public synchronized void addPlayer(SnakesProto.GamePlayer player) {
+    public synchronized void addPlayer(String name, int port, String ip) {
+        SnakesProto.GamePlayer.Builder playerBuilder = SnakesProto.GamePlayer.newBuilder();
+        playerBuilder
+                .setId(state.getPlayers().getPlayersCount())
+                .setScore(0)
+                .setRole(SnakesProto.NodeRole.NORMAL)
+                .setIpAddress(ip)
+                .setPort(port)
+                .setName(name)
+                .setType(SnakesProto.PlayerType.HUMAN);
+        SnakesProto.GamePlayer player = playerBuilder.build();
+
         SnakesProto.GameState.Builder builder = state.toBuilder();
-        List<SnakesProto.GamePlayer> players = builder.getPlayers().getPlayersList();
+        List<SnakesProto.GamePlayer> players = new ArrayList<>(builder.getPlayers().getPlayersList());
         players.add(player);
         builder.setPlayers(SnakesProto.GamePlayers.newBuilder().addAllPlayers(players).build());
 
@@ -150,10 +167,10 @@ public class GameModel {
 
         snakeBuilder.setHeadDirection(SnakesProto.Direction.RIGHT)
                 .setPlayerId(player.getId())
-                .setPoints(0, coordHead)
-                .setPoints(1, coordTail)
+                .addPoints(coordHead)
+                .addPoints(coordTail)
                 .setState(SnakesProto.GameState.Snake.SnakeState.ALIVE);
-        builder.setSnakes(builder.getSnakesCount(), snakeBuilder);
+        builder.addSnakes(snakeBuilder);
         this.state = builder.build();
     }
 
@@ -182,8 +199,8 @@ public class GameModel {
 
         SnakesProto.GameState.Coord.Builder coordBuilder = SnakesProto.GameState.Coord.newBuilder();
 
-        List<SnakesProto.GameState.Snake> snakes = builder.getSnakesList();
-        List<SnakesProto.GameState.Coord> food = builder.getFoodsList();
+        List<SnakesProto.GameState.Snake> snakes = new ArrayList<>(builder.getSnakesList());
+        List<SnakesProto.GameState.Coord> food = new ArrayList<>(builder.getFoodsList());
         Map<SnakesProto.GameState.Coord, List<SnakesProto.GameState.Snake>> contestPoints = new HashMap<>();
 
         for (SnakesProto.GameState.Snake snake : snakes) {
