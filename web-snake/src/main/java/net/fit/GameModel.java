@@ -188,7 +188,9 @@ public class GameModel {
         List<SnakesProto.GameState.Coord> food = new ArrayList<>(builder.getFoodsList());
         Map<SnakesProto.GameState.Coord, List<SnakesProto.GameState.Snake>> contestPoints = new HashMap<>();
 
-        for (SnakesProto.GameState.Snake snake : snakes) {
+        for (int i = 0; i < snakes.size(); i++) {
+            SnakesProto.GameState.Snake snake = snakes.get(i);
+            List<SnakesProto.GameState.Coord> pointsList = new ArrayList<>(snake.getPointsList());
             SnakesProto.Direction newDirection = updateDirection.getOrDefault(snake.getPlayerId(), snake.getHeadDirection());
 
             //Если новое направление противоположно текущему, то не учитываем его
@@ -198,8 +200,8 @@ public class GameModel {
             }
 
             //Выбираем голову и следующий за ней узел, обновляем данные
-            SnakesProto.GameState.Coord head = snake.getPointsList().get(0);
-            SnakesProto.GameState.Coord bend = snake.getPointsList().get(1);
+            SnakesProto.GameState.Coord head = pointsList.get(0);
+            SnakesProto.GameState.Coord bend = pointsList.get(1);
             SnakesProto.GameState.Coord newHead = null;
             SnakesProto.GameState.Coord newBend = null;
 
@@ -224,18 +226,16 @@ public class GameModel {
 
             if (newDirection.equals(snake.getHeadDirection())) {
                 newBend = newBend.toBuilder().setX(newBend.getX() + bend.getX()).setY(newBend.getY() + bend.getY()).build();
-                snake.getPointsList().set(0, newHead);
+                pointsList.set(0, newHead);
+            } else {
+                pointsList.add(0, newHead);
             }
-            else {
-                snake.getPointsList().add(0, newHead);
-            }
-            snake.getPointsList().set(1, newBend);
+            pointsList.set(1, newBend);
 
             //Добавляем новую змею, претендующую на клетку поля
             if (contestPoints.containsKey(newHead)) {
                 contestPoints.get(newHead).add(snake);
-            }
-            else {
+            } else {
                 ArrayList<SnakesProto.GameState.Snake> contestSnakes = new ArrayList<>();
                 contestSnakes.add(snake);
                 contestPoints.put(newHead, contestSnakes);
@@ -250,7 +250,7 @@ public class GameModel {
             SnakesProto.GameState.Coord tail = snake.getPointsList().get(snake.getPointsCount() - 1);
             //Если хвост был сдвиут на одну клетку, удаляем содержащий его узел
             if (Math.abs(tail.getY() + tail.getX()) == 1) {
-                snake.getPointsList().remove(snake.getPointsCount() - 1);
+                pointsList.remove(snake.getPointsCount() - 1);
                 continue;
             }
 
@@ -259,20 +259,17 @@ public class GameModel {
             if (tail.getX() == 0) {
                 if (tail.getY() > 0) {
                     newTail = tail.toBuilder().setY(tail.getY() - 1).build();
-                }
-                else {
+                } else {
                     newTail = tail.toBuilder().setY(tail.getY() + 1).build();
                 }
-            }
-            else {
+            } else {
                 if (tail.getX() > 0) {
                     newTail = tail.toBuilder().setX(tail.getX() - 1).build();
-                }
-                else {
+                } else {
                     newTail = tail.toBuilder().setY(tail.getX() + 1).build();
                 }
             }
-            snake.getPointsList().set(snake.getPointsCount() - 1, newTail);
+            pointsList.set(snake.getPointsCount() - 1, newTail);
         }
         //Закончили двигать змеек (были изменены списки snakes и food)
 

@@ -33,6 +33,8 @@ public class DatagramListener implements Runnable {
         }
         byte[] data = new byte[2048];
         DatagramPacket packet = new DatagramPacket(data, data.length);
+        SnakesProto.GameMessage.AckMsg.Builder ackBuilder = SnakesProto.GameMessage.AckMsg.newBuilder();
+        SnakesProto.GameMessage.Builder messageBuilder = SnakesProto.GameMessage.newBuilder().setAck(ackBuilder);
         SnakesProto.GameMessage message;
         while (true) {
             try {
@@ -71,6 +73,9 @@ public class DatagramListener implements Runnable {
                     case TYPE_NOT_SET:
                     default:
                         System.err.println("Received unknown type :" + message);
+                }
+                if (message.getTypeCase() != SnakesProto.GameMessage.TypeCase.ACK && message.getTypeCase() != SnakesProto.GameMessage.TypeCase.ANNOUNCEMENT) {
+                    networkManager.commit(messageBuilder.setMsgSeq(message.getMsgSeq()).build(), packet.getSocketAddress());
                 }
             } catch (IOException | InterruptedException e) {
                 e.printStackTrace();

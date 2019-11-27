@@ -4,7 +4,7 @@ import lombok.AllArgsConstructor;
 import net.fit.GameModel;
 
 @AllArgsConstructor
-public class GameIterationActivity implements Runnable {
+public class GameIterationActivity extends VaryingActivity implements Runnable {
     private GameModel model;
     private DatagramListener listener;
 
@@ -12,6 +12,11 @@ public class GameIterationActivity implements Runnable {
     public void run() {
         while (true) {
             try {
+                synchronized (activityLock) {
+                    while (!activityLock.get()) {
+                        activityLock.wait();
+                    }
+                }
                 Thread.sleep(model.getConfig().getStateDelayMs());
                 model.iterateState(listener.getRecentDirections());
             } catch (InterruptedException e) {

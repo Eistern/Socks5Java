@@ -1,6 +1,7 @@
 package net.fit.activities;
 
 import lombok.AllArgsConstructor;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import net.fit.GameModel;
 import net.fit.proto.SnakesProto;
@@ -26,7 +27,7 @@ public class NetworkManager implements Runnable {
 
     private long sequenceNum = 0;
     private BlockingQueue<Message> messageQueue = new LinkedBlockingQueue<>();
-    private PingActivity pingActivity = new PingActivity();
+    @Getter private PingActivity pingActivity = new PingActivity();
     private final DatagramSocket socket;
     private final GameModel model;
 
@@ -62,7 +63,7 @@ public class NetworkManager implements Runnable {
         }
     }
 
-    public class PingActivity implements Runnable {
+    public class PingActivity extends VaryingActivity implements Runnable {
         private final AtomicBoolean lock = new AtomicBoolean(false);
 
         void notifyMessage() {
@@ -80,10 +81,17 @@ public class NetworkManager implements Runnable {
 
             while (true) {
                 try {
+                    synchronized (activityLock) {
+                        while (!activityLock.get()) {
+                            activityLock.wait();
+                        }
+                    }
                     synchronized (lock) {
                         lock.wait(model.getConfig().getPingDelayMs());
                         if (!lock.get()) {
-                            commit(msgBuilder.build(), model.getHost());
+                            commit(msgBuilder
+                                    .setMsgSeq(NetworkManager.this.getSequenceNum())
+                                    .build(), model.getHost());
                         }
                         lock.set(false);
                     }
