@@ -79,6 +79,7 @@ public class ConnectFrame extends JFrame {
 
         setContentPane(pnPanel0);
         pack();
+        setSize(240, 180);
         setVisible(true);
     }
 }

@@ -7,6 +7,7 @@ import net.fit.activities.DatagramListener;
 import net.fit.activities.GameIterationActivity;
 import net.fit.activities.NetworkManager;
 import net.fit.gui.connection.ConnectFrame;
+import net.fit.gui.view.ViewFrame;
 
 import java.net.MulticastSocket;
 
@@ -38,6 +39,9 @@ public class ThreadManager {
 
         ConnectFrame frame = new ConnectFrame(networkManager, datagramAnnouncements);
         frame.setVisible(true);
+
+        ViewFrame viewFrame = new ViewFrame(model, this.networkManager);
+        viewFrame.setVisible(true);
     }
 
     public void activateMaster() {

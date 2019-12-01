@@ -65,8 +65,9 @@ public class DatagramListener implements Runnable {
                         model.updateState(message.getState().getState());
                         break;
                     case STEER:
-                        int id = model.idByIpAndPort(packet.getAddress().getHostName(), packet.getPort());
+                        int id = model.idByIpAndPort(packet.getAddress().getHostAddress(), packet.getPort());
                         recentDirections.put(id, message.getSteer().getDirection());
+                        break;
                     case ERROR:
                         ErrorBox.showError(message.getError().getErrorMessage());
                         break;

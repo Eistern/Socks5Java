@@ -1,6 +1,7 @@
 package net.fit;
 
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import net.fit.proto.SnakesProto;
 
@@ -8,9 +9,10 @@ import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.util.*;
 
+@EqualsAndHashCode(callSuper = false)
 @Data
 @NoArgsConstructor
-public class GameModel {
+public class GameModel extends Observable {
     private final Object stateLock = new Object();
     private SnakesProto.GameConfig config;
     private SnakesProto.GameState state;
@@ -29,11 +31,6 @@ public class GameModel {
         this.state = builder.build();
     }
 
-    public void init(SnakesProto.GameState old) {
-        state = old;
-        config = old.getConfig();
-    }
-
     public boolean canJoin(String ip, int port) {
         List<SnakesProto.GamePlayer> players = new ArrayList<>(state.getPlayers().getPlayersList());
         for (SnakesProto.GamePlayer player : players) {
@@ -42,11 +39,11 @@ public class GameModel {
         }
 
         List<SnakesProto.GameState.Snake> snakes = getState().getSnakesList();
-        boolean[][] field = generateBoolField(snakes, FillType.FIELD);
+        int[][] field = generateIntField(snakes, FillType.FIELD);
 
         for (int x = 0; x < config.getHeight(); x++) {
             for (int y = 0; y < config.getWidth(); y++) {
-                if (!field[x][y]) {
+                if (field[x][y] == 0) {
                     freeX = x;
                     freeY = y;
                     return true;
@@ -60,8 +57,8 @@ public class GameModel {
         STRICT, FIELD
     }
 
-    private boolean[][] generateBoolField(List<SnakesProto.GameState.Snake> snakes, FillType type) {
-        boolean[][] field = new boolean[config.getHeight()][config.getWidth()];
+    private int[][] generateIntField(List<SnakesProto.GameState.Snake> snakes, FillType type) {
+        int[][] field = new int[config.getHeight()][config.getWidth()];
         int i, j, xFrom, xTo, yFrom, yTo;
         boolean invertX = false, invertY = false;
         for (SnakesProto.GameState.Snake snake : snakes) {
@@ -88,8 +85,8 @@ public class GameModel {
                     invertY = true;
                 }
                 for (int coordX = xFrom; coordX <= xTo; coordX++) {
-                    for (int coordY = yTo; coordY <= j + yFrom; coordY++) {
-                        fill(field, invertX ? -1 * coordX : coordX, invertY ? -1 * coordY: coordY, type);
+                    for (int coordY = yFrom; coordY <= yTo; coordY++) {
+                        fill(field, invertX ? -1 * coordX : coordX, invertY ? -1 * coordY: coordY, snake.getPlayerId(), type);
                     }
                 }
                 invertX = false;
@@ -101,19 +98,34 @@ public class GameModel {
         return field;
     }
 
-    private void fill(boolean[][] field, int x, int y, FillType type) {
+    private void fill(int[][] field, int x, int y, int with, FillType type) {
         int maxX = config.getWidth();
         int maxY = config.getHeight();
         if (type == FillType.FIELD) {
             for (int i = x - 2; i <= x + 2; i++) {
                 for (int j = y - 2; j <= y + 2; j++) {
-                    field[(maxY + j) % maxY][(maxX + i) % maxX] = true;
+                    field[(maxY + j) % maxY][(maxX + i) % maxX] = with;
                 }
             }
         }
         else {
-            field[(maxY + y) % maxY][(maxX + x) % maxX] = true;
+            field[(maxY + y) % maxY][(maxX + x) % maxX] = with;
         }
+    }
+
+    private SnakesProto.GameState.Coord getTailCoords(List<SnakesProto.GameState.Coord> coords) {
+        int x = -1;
+        int y = -1;
+        for (SnakesProto.GameState.Coord coord : coords) {
+            if (x == -1 && y == -1) {
+                x = coord.getX();
+                y = coord.getY();
+                continue;
+            }
+            x += coord.getX();
+            y += coord.getY();
+        }
+        return SnakesProto.GameState.Coord.newBuilder().setX(x).setY(y).build();
     }
 
     public SnakesProto.GamePlayers getPlayers() {
@@ -130,9 +142,10 @@ public class GameModel {
     }
 
     public synchronized void addPlayer(String name, int port, String ip) {
+        System.out.println(ip + ":" + port);
         SnakesProto.GamePlayer.Builder playerBuilder = SnakesProto.GamePlayer.newBuilder();
         playerBuilder
-                .setId(state.getPlayers().getPlayersCount())
+                .setId(state.getPlayers().getPlayersCount() + 1)
                 .setScore(0)
                 .setRole(SnakesProto.NodeRole.NORMAL)
                 .setIpAddress(ip)
@@ -157,21 +170,27 @@ public class GameModel {
                 .setState(SnakesProto.GameState.Snake.SnakeState.ALIVE);
         builder.addSnakes(snakeBuilder);
         this.state = builder.build();
+        this.setChanged();
+        this.notifyObservers();
     }
 
     public synchronized void updateState(SnakesProto.GameState nextState) {
         if (nextState.getStateOrder() > state.getStateOrder()) {
             this.state = nextState;
             this.config = nextState.getConfig();
+            this.setChanged();
+            this.notifyObservers();
         }
     }
 
     public synchronized int idByIpAndPort(String ip, int port) {
+        System.out.println("Find " + ip + ":" + port);
         List<SnakesProto.GamePlayer> players = state.getPlayers().getPlayersList();
         for (SnakesProto.GamePlayer player : players) {
             if (player.getIpAddress().equals(ip) && player.getPort() == port)
                 return player.getId();
         }
+        System.out.println("Player not found");
         return -1;
     }
 
@@ -188,6 +207,7 @@ public class GameModel {
         List<SnakesProto.GameState.Coord> food = new ArrayList<>(builder.getFoodsList());
         Map<SnakesProto.GameState.Coord, List<SnakesProto.GameState.Snake>> contestPoints = new HashMap<>();
 
+        int[][] contestField = generateIntField(builder.getSnakesList(), FillType.STRICT);
         for (int i = 0; i < snakes.size(); i++) {
             SnakesProto.GameState.Snake snake = snakes.get(i);
             List<SnakesProto.GameState.Coord> pointsList = new ArrayList<>(snake.getPointsList());
@@ -233,24 +253,30 @@ public class GameModel {
             pointsList.set(1, newBend);
 
             //Добавляем новую змею, претендующую на клетку поля
-            if (contestPoints.containsKey(newHead)) {
-                contestPoints.get(newHead).add(snake);
-            } else {
+            if (!contestPoints.containsKey(newHead)) {
                 ArrayList<SnakesProto.GameState.Snake> contestSnakes = new ArrayList<>();
-                contestSnakes.add(snake);
                 contestPoints.put(newHead, contestSnakes);
             }
 
             //Если змея попала на клетку с едой, удаляем еду, не двигаем хвост
             if (food.contains(newHead)) {
                 food.remove(newHead);
+                SnakesProto.GameState.Snake resultSnake = snake.toBuilder().clearPoints().addAllPoints(pointsList).setHeadDirection(newDirection).build();
+                snakes.set(i, resultSnake);
+                contestPoints.get(newHead).add(resultSnake);
                 continue;
             }
 
-            SnakesProto.GameState.Coord tail = snake.getPointsList().get(snake.getPointsCount() - 1);
+            SnakesProto.GameState.Coord tail = pointsList.get(pointsList.size() - 1);
+            SnakesProto.GameState.Coord absoluteCoord = getTailCoords(pointsList);
+            contestField[(maxX + absoluteCoord.getX()) % maxX][(maxY + absoluteCoord.getY()) % maxY] = 0;
+
             //Если хвост был сдвиут на одну клетку, удаляем содержащий его узел
             if (Math.abs(tail.getY() + tail.getX()) == 1) {
-                pointsList.remove(snake.getPointsCount() - 1);
+                pointsList.remove(pointsList.size() - 1);
+                SnakesProto.GameState.Snake resultSnake = snake.toBuilder().clearPoints().addAllPoints(pointsList).setHeadDirection(newDirection).build();
+                snakes.set(i, resultSnake);
+                contestPoints.get(newHead).add(resultSnake);
                 continue;
             }
 
@@ -266,10 +292,14 @@ public class GameModel {
                 if (tail.getX() > 0) {
                     newTail = tail.toBuilder().setX(tail.getX() - 1).build();
                 } else {
-                    newTail = tail.toBuilder().setY(tail.getX() + 1).build();
+                    newTail = tail.toBuilder().setX(tail.getX() + 1).build();
                 }
             }
-            pointsList.set(snake.getPointsCount() - 1, newTail);
+            pointsList.set(pointsList.size() - 1, newTail);
+
+            SnakesProto.GameState.Snake resultSnake = snake.toBuilder().clearPoints().addAllPoints(pointsList).setHeadDirection(newDirection).build();
+            snakes.set(i, resultSnake);
+            contestPoints.get(newHead).add(resultSnake);
         }
         //Закончили двигать змеек (были изменены списки snakes и food)
 
@@ -285,30 +315,14 @@ public class GameModel {
         });
 
         //Проверка на столкновение "голова-тело"
-        boolean[][] contestField = generateBoolField(snakes, FillType.STRICT);
-        for (int i = 0; i < config.getHeight(); i++) {
-            for (int j = 0; j < config.getWidth(); j++) {
-                if (contestField[(maxY + i) % maxY][(maxX + j) % maxX] && (
-                        contestField[(maxY + i - 1) % maxY][(maxX + j) % maxX] && contestField[(maxY + i) % maxY][(maxX + j - 1) % maxX] && (
-                                contestField[(maxY + i + 1) % maxY][(maxX + j) % maxX] || contestField[(maxY + i) % maxY][(maxX + j + 1) % maxX]
-                                )
-                        ||
-                        contestField[(maxY + i + 1) % maxY][(maxX + j) % maxX] && contestField[(maxY + i) % maxY][(maxX + j + 1) % maxX] && (
-                                contestField[(maxY + i - 1) % maxY][(maxX + j) % maxX] || contestField[(maxY + i) % maxY][(maxX + j - 1) % maxX]
-                                )
-                        )) {
-                    Iterator<SnakesProto.GameState.Snake> iterator = snakes.iterator();
-                    while (iterator.hasNext()) {
-                        SnakesProto.GameState.Snake nextSnake = iterator.next();
-                        SnakesProto.GameState.Coord head = nextSnake.getPoints(0);
-                        if (head.getY() == i && head.getX() == j) {
-                            iterator.remove();
-                            deadSnakes.add(nextSnake);
-                        }
-                    }
-                }
+        int[][] finalContestField = contestField;
+        contestPoints.forEach((coord, contestSnakes) -> {
+            if (finalContestField[coord.getX()][coord.getY()] != 0) {
+                System.out.println(Arrays.deepToString(finalContestField));
+                snakes.removeAll(contestSnakes);
+                deadSnakes.addAll(contestSnakes);
             }
-        }
+        });
 
         //Генерация еды из мертвых змеек
         int i, j, xFrom, xTo, yFrom, yTo;
@@ -340,8 +354,8 @@ public class GameModel {
                     for (int coordY = yTo; coordY <= j + yFrom; coordY++) {
                         if (Math.random() < config.getDeadFoodProb()) {
                             food.add(coordBuilder
-                                    .setY(invertY ? -1 * coordY : coordY)
-                                    .setX(invertX ? -1 * coordX : coordX)
+                                    .setY((maxY + (invertY ? -1 * coordY : coordY)) % maxY)
+                                    .setX((maxX + (invertX ? -1 * coordX : coordX)) % maxX)
                                     .build());
                         }
                     }
@@ -356,12 +370,12 @@ public class GameModel {
         //Генерируем недостающую еду
         int foodX, foodY;
         if (food.size() < config.getFoodStatic() + config.getFoodPerPlayer() * state.getPlayers().getPlayersCount()) {
-            contestField = generateBoolField(snakes, FillType.STRICT);
+            contestField = generateIntField(snakes, FillType.STRICT);
             while (food.size() < config.getFoodStatic() + config.getFoodPerPlayer() * state.getPlayers().getPlayersCount()) {
                 foodX = (int) (Math.random() * maxX);
                 foodY = (int) (Math.random() * maxY);
                 SnakesProto.GameState.Coord foodCoord = coordBuilder.setX(foodX).setY(foodY).build();
-                if (!contestField[foodY][foodX] && !food.contains(foodCoord)) {
+                if (contestField[foodY][foodX] == 0 && !food.contains(foodCoord)) {
                     food.add(foodCoord);
                 }
             }
@@ -371,6 +385,10 @@ public class GameModel {
 
         builder.clearSnakes();
         builder.addAllSnakes(snakes);
+        builder.clearFoods();
+        builder.addAllFoods(food);
         state = builder.build();
+        this.setChanged();
+        this.notifyObservers();
     }
 }
