@@ -13,6 +13,5 @@ public class Main {
         AnnouncementHolder datagramAnnouncements = new AnnouncementHolder();
 
         ThreadManager threadManager = new ThreadManager(multicastSocket, model, datagramAnnouncements);
-        threadManager.activateMaster();
     }
 }

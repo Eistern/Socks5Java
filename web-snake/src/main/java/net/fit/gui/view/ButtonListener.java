@@ -43,7 +43,7 @@ public class ButtonListener implements KeyListener {
         try {
             networkManager.commit(messageBuilder
                     .setMsgSeq(networkManager.getSequenceNum())
-                    .setSteer(steerBuilder.setDirection(direction)).build(), new InetSocketAddress("26.83.213.208", 9192));
+                    .setSteer(steerBuilder.setDirection(direction)).build(), model.getHost());
 
         } catch (InterruptedException ex) {
             ex.printStackTrace();

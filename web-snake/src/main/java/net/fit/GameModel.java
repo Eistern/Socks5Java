@@ -8,6 +8,8 @@ import net.fit.proto.SnakesProto;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.util.*;
+import java.util.stream.Collector;
+import java.util.stream.Collectors;
 
 @EqualsAndHashCode(callSuper = false)
 @Data
@@ -29,6 +31,12 @@ public class GameModel extends Observable {
         builder.setStateOrder(0);
         builder.setConfig(config);
         this.state = builder.build();
+    }
+
+    public void init(SnakesProto.GameConfig config, String ip, int port, String name) {
+        init(config);
+        canJoin(ip, port);
+        addPlayer(name, port, ip);
     }
 
     public boolean canJoin(String ip, int port) {
@@ -138,30 +146,41 @@ public class GameModel extends Observable {
     }
 
     public SocketAddress getHost() {
-        List<SnakesProto.GamePlayer> players = state.getPlayers().getPlayersList();
-        for (SnakesProto.GamePlayer player : players) {
-            if (player.getRole() == SnakesProto.NodeRole.MASTER)
-                return new InetSocketAddress(player.getIpAddress(), player.getPort());
+        List<SnakesProto.GamePlayer> players = new ArrayList<>(state.getPlayers().getPlayersList());
+        SnakesProto.GamePlayer master = players.parallelStream().filter(player -> player.getRole() == SnakesProto.NodeRole.MASTER).findFirst().orElse(null);
+        if (master == null) {
+            System.out.println("No master");
+            return null;
         }
-        return null;
+        return new InetSocketAddress(master.getIpAddress(), master.getPort());
     }
 
-    public synchronized void addPlayer(String name, int port, String ip) {
-        System.out.println(ip + ":" + port);
+    public synchronized SnakesProto.GameMessage.RoleChangeMsg addPlayer(String name, int port, String ip) {
+        System.out.println("Adding " + ip + ":" + port);
+        SnakesProto.GameState.Builder builder = state.toBuilder();
+        List<SnakesProto.GamePlayer> players = new ArrayList<>(builder.getPlayers().getPlayersList());
+
+        SnakesProto.NodeRole nextRole = SnakesProto.NodeRole.NORMAL;
+        if (players.size() == 0) {
+            nextRole = SnakesProto.NodeRole.MASTER;
+        }
+        if (players.size() == 1) {
+            nextRole = SnakesProto.NodeRole.DEPUTY;
+        }
+
         SnakesProto.GamePlayer.Builder playerBuilder = SnakesProto.GamePlayer.newBuilder();
         playerBuilder
                 .setId(state.getPlayers().getPlayersCount() + 1)
                 .setScore(0)
-                .setRole(SnakesProto.NodeRole.NORMAL)
+                .setRole(nextRole)
                 .setIpAddress(ip)
                 .setPort(port)
                 .setName(name)
                 .setType(SnakesProto.PlayerType.HUMAN);
         SnakesProto.GamePlayer player = playerBuilder.build();
 
-        SnakesProto.GameState.Builder builder = state.toBuilder();
-        List<SnakesProto.GamePlayer> players = new ArrayList<>(builder.getPlayers().getPlayersList());
         players.add(player);
+        builder.clearPlayers();
         builder.setPlayers(SnakesProto.GamePlayers.newBuilder().addAllPlayers(players).build());
 
         SnakesProto.GameState.Snake.Builder snakeBuilder = SnakesProto.GameState.Snake.newBuilder();
@@ -177,6 +196,11 @@ public class GameModel extends Observable {
         this.state = builder.build();
         this.setChanged();
         this.notifyObservers();
+
+        if (nextRole == SnakesProto.NodeRole.NORMAL) {
+            return null;
+        }
+        return SnakesProto.GameMessage.RoleChangeMsg.newBuilder().setSenderRole(SnakesProto.NodeRole.MASTER).setReceiverRole(nextRole).build();
     }
 
     public synchronized void updateState(SnakesProto.GameState nextState) {
@@ -190,13 +214,13 @@ public class GameModel extends Observable {
 
     public synchronized int idByIpAndPort(String ip, int port) {
         System.out.println("Find " + ip + ":" + port);
-        List<SnakesProto.GamePlayer> players = state.getPlayers().getPlayersList();
-        for (SnakesProto.GamePlayer player : players) {
-            if (player.getIpAddress().equals(ip) && player.getPort() == port)
-                return player.getId();
+        List<SnakesProto.GamePlayer> players = new ArrayList<>(state.getPlayers().getPlayersList());
+        SnakesProto.GamePlayer result = players.parallelStream().filter(player -> player.getIpAddress().equals(ip) && player.getPort() == port).findFirst().orElse(null);
+        if (result == null) {
+            System.out.println("Player not found");
+            return -1;
         }
-        System.out.println("Player not found");
-        return -1;
+        return result.getId();
     }
 
     public synchronized void iterateState(Map<Integer, SnakesProto.Direction> updateDirection) {
@@ -210,11 +234,20 @@ public class GameModel extends Observable {
 
         List<SnakesProto.GameState.Snake> snakes = new ArrayList<>(builder.getSnakesList());
         List<SnakesProto.GameState.Coord> food = new ArrayList<>(builder.getFoodsList());
+        List<SnakesProto.GamePlayer> players = new ArrayList<>(builder.getPlayers().getPlayersList());
+
+        Collector<SnakesProto.GamePlayer, ?, Map<Integer, Integer>> collector = Collectors.toMap(SnakesProto.GamePlayer::getId, SnakesProto.GamePlayer::getScore);
+        Map<Integer, Integer> scoreMap = players.parallelStream().collect(collector);
+
         Map<SnakesProto.GameState.Coord, List<SnakesProto.GameState.Snake>> contestPoints = new HashMap<>();
 
         int[][] contestField = generateIntField(builder.getSnakesList(), FillType.STRICT);
         for (int i = 0; i < snakes.size(); i++) {
             SnakesProto.GameState.Snake snake = snakes.get(i);
+            SnakesProto.GamePlayer player = players.parallelStream().filter(gamePlayer -> gamePlayer.getId() == snake.getPlayerId()).findFirst().orElse(null);
+            if (player == null)
+                continue;
+
             List<SnakesProto.GameState.Coord> pointsList = new ArrayList<>(snake.getPointsList());
             SnakesProto.Direction newDirection = updateDirection.getOrDefault(snake.getPlayerId(), snake.getHeadDirection());
 
@@ -269,6 +302,7 @@ public class GameModel extends Observable {
                 SnakesProto.GameState.Snake resultSnake = snake.toBuilder().clearPoints().addAllPoints(pointsList).setHeadDirection(newDirection).build();
                 snakes.set(i, resultSnake);
                 contestPoints.get(newHead).add(resultSnake);
+                scoreMap.put(resultSnake.getPlayerId(), scoreMap.get(resultSnake.getPlayerId()) + 1);
                 continue;
             }
 
@@ -311,18 +345,19 @@ public class GameModel extends Observable {
         //Начинаем удалять змеек
         List<SnakesProto.GameState.Snake> deadSnakes = new ArrayList<>();
 
-        //Проверка на столкновения "голова-голова"
+        //Проверка на столкновение "голова-тело"
+        int[][] finalContestField = contestField;
         contestPoints.forEach((coord, contestSnakes) -> {
-            if (contestSnakes.size() > 1) {
+            if (finalContestField[coord.getY()][coord.getX()] != 0) {
+                scoreMap.put(finalContestField[coord.getY()][coord.getX()], scoreMap.get(finalContestField[coord.getY()][coord.getX()]) + contestSnakes.size());
                 snakes.removeAll(contestSnakes);
                 deadSnakes.addAll(contestSnakes);
             }
         });
 
-        //Проверка на столкновение "голова-тело"
-        int[][] finalContestField = contestField;
+        //Проверка на столкновения "голова-голова"
         contestPoints.forEach((coord, contestSnakes) -> {
-            if (finalContestField[coord.getY()][coord.getX()] != 0) {
+            if (contestSnakes.size() > 1) {
                 snakes.removeAll(contestSnakes);
                 deadSnakes.addAll(contestSnakes);
             }

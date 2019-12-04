@@ -22,7 +22,7 @@ public class ThreadManager {
     private State previousState = State.NONE;
 
     enum State {
-        CLIENT, MASTER, NONE
+        CLIENT, MASTER, NONE, PAUSED
     }
 
     public ThreadManager(MulticastSocket multicastSocket, GameModel model, AnnouncementHolder datagramAnnouncements) {
@@ -30,21 +30,38 @@ public class ThreadManager {
         this.model = model;
 
         this.networkManager = new NetworkManager(multicastSocket, model);
-        this.datagramListener = new DatagramListener(model, this.networkManager, multicastSocket, datagramAnnouncements);
+        this.datagramListener = new DatagramListener(model, this.networkManager, multicastSocket, datagramAnnouncements, this);
 
         Thread networkManagerThread = new Thread(this.networkManager, "Sender");
         Thread datagramListenerThread = new Thread(this.datagramListener, "Listener");
         networkManagerThread.start();
         datagramListenerThread.start();
 
-        ConnectFrame frame = new ConnectFrame(networkManager, datagramAnnouncements);
+        ConnectFrame frame = new ConnectFrame(networkManager, datagramAnnouncements, model, this);
         frame.setVisible(true);
 
         ViewFrame viewFrame = new ViewFrame(model, this.networkManager);
         viewFrame.setVisible(true);
     }
 
-    public void activateMaster() {
+    public synchronized void pauseActivities() {
+        if (previousState == State.PAUSED) {
+            return;
+        }
+        if (previousState == State.CLIENT) {
+            pingActivity.stopActivity();
+        }
+        if (previousState == State.MASTER) {
+            gameIterationActivity.stopActivity();
+            announcementActivity.stopActivity();
+        }
+        previousState = State.PAUSED;
+    }
+
+    public synchronized void activateMaster() {
+        if (previousState == State.MASTER) {
+            return;
+        }
         if (previousState == State.CLIENT) {
             pingActivity.stopActivity();
         }
@@ -62,7 +79,10 @@ public class ThreadManager {
         previousState = State.MASTER;
     }
 
-    public void activateClient() {
+    public synchronized void activateClient() {
+        if (previousState == State.CLIENT) {
+            return;
+        }
         if (previousState == State.MASTER) {
             gameIterationActivity.stopActivity();
             announcementActivity.stopActivity();

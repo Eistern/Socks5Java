@@ -1,7 +1,9 @@
 package net.fit.gui.connection;
 
 import net.fit.AnnouncementHolder;
+import net.fit.GameModel;
 import net.fit.activities.NetworkManager;
+import net.fit.thread.ThreadManager;
 
 import javax.swing.*;
 import java.awt.*;
@@ -10,8 +12,9 @@ public class ConnectFrame extends JFrame {
     private JListHolder gameList;
     private JButton refreshButton;
     private JButton connectButton;
+    private JButton createButton;
 
-    public ConnectFrame(NetworkManager manager, AnnouncementHolder datagramAnnouncement) {
+    public ConnectFrame(NetworkManager manager, AnnouncementHolder datagramAnnouncement, GameModel model, ThreadManager threadManager) {
         super("Current Games");
 
         JPanel pnPanel0 = new JPanel();
@@ -74,6 +77,11 @@ public class ConnectFrame extends JFrame {
         gbcPanel0.anchor = GridBagConstraints.NORTH;
         gbPanel0.setConstraints(connectButton, gbcPanel0);
         pnPanel0.add(connectButton);
+
+        CreateListener createListener = new CreateListener(model, threadManager);
+        createButton = new JButton("Create game");
+        createButton.addActionListener(createListener);
+        pnPanel1.add(createButton);
 
         setDefaultCloseOperation(EXIT_ON_CLOSE);
 

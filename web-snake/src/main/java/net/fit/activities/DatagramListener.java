@@ -6,6 +6,7 @@ import net.fit.AnnouncementHolder;
 import net.fit.GameModel;
 import net.fit.gui.error.ErrorBox;
 import net.fit.proto.SnakesProto;
+import net.fit.thread.ThreadManager;
 
 import java.io.IOException;
 import java.net.DatagramPacket;
@@ -22,6 +23,7 @@ public class DatagramListener implements Runnable {
     private final NetworkManager networkManager;
     private final MulticastSocket socket;
     private final AnnouncementHolder announcementHolder;
+    private final ThreadManager threadManager;
     @Getter private Map<Integer, SnakesProto.Direction> recentDirections = new HashMap<>();
 
     @Override
@@ -34,7 +36,7 @@ public class DatagramListener implements Runnable {
         byte[] data = new byte[2048];
         DatagramPacket packet = new DatagramPacket(data, data.length);
         SnakesProto.GameMessage.AckMsg.Builder ackBuilder = SnakesProto.GameMessage.AckMsg.newBuilder();
-        SnakesProto.GameMessage.Builder messageBuilder = SnakesProto.GameMessage.newBuilder().setAck(ackBuilder);
+        SnakesProto.GameMessage.Builder ackMessageBuilder = SnakesProto.GameMessage.newBuilder().setAck(ackBuilder);
         SnakesProto.GameMessage message;
         while (true) {
             try {
@@ -54,7 +56,13 @@ public class DatagramListener implements Runnable {
                                     .build(), packet.getSocketAddress());
                         }
                         else {
-                            model.addPlayer(message.getJoin().getName(), packet.getPort(), packet.getAddress().getHostAddress());
+                            SnakesProto.GameMessage.RoleChangeMsg changeMsg = model.addPlayer(message.getJoin().getName(), packet.getPort(), packet.getAddress().getHostAddress());
+                            if (changeMsg != null) {
+                                networkManager.commit(SnakesProto.GameMessage.newBuilder()
+                                        .setRoleChange(changeMsg)
+                                        .setMsgSeq(networkManager.getSequenceNum())
+                                        .build(), packet.getSocketAddress());
+                            }
                         }
                     case ACK:
                         networkManager.confirm(message.getMsgSeq());
@@ -69,12 +77,20 @@ public class DatagramListener implements Runnable {
                     case ERROR:
                         ErrorBox.showError(message.getError().getErrorMessage());
                         break;
+                    case PING:
+                    case ROLE_CHANGE:
+                        switch (message.getRoleChange().getReceiverRole()) {
+                            case MASTER:
+                                threadManager.activateMaster();
+                            default:
+                                System.out.println("Got :" + message);
+                        }
                     case TYPE_NOT_SET:
                     default:
                         System.err.println("Received unknown type :" + message);
                 }
                 if (message.getTypeCase() != SnakesProto.GameMessage.TypeCase.ACK && message.getTypeCase() != SnakesProto.GameMessage.TypeCase.ANNOUNCEMENT) {
-                    networkManager.commit(messageBuilder.setMsgSeq(message.getMsgSeq()).build(), packet.getSocketAddress());
+                    networkManager.commit(ackMessageBuilder.setMsgSeq(message.getMsgSeq()).build(), packet.getSocketAddress());
                 }
             } catch (IOException | InterruptedException e) {
                 e.printStackTrace();
