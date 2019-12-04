@@ -42,7 +42,6 @@ public class DatagramListener implements Runnable {
                 message = SnakesProto.GameMessage.parseFrom(Arrays.copyOf(packet.getData(), packet.getLength()));
                 switch (message.getTypeCase()) {
                     case ANNOUNCEMENT:
-                        System.out.println("Got announce");
                         announcementHolder.addAnnouncement(message.getAnnouncement(), (InetSocketAddress) packet.getSocketAddress());
                         break;
                     case JOIN:
@@ -57,7 +56,6 @@ public class DatagramListener implements Runnable {
                         else {
                             model.addPlayer(message.getJoin().getName(), packet.getPort(), packet.getAddress().getHostAddress());
                         }
-                        System.out.println("JOIN received");
                     case ACK:
                         networkManager.confirm(message.getMsgSeq());
                         break;

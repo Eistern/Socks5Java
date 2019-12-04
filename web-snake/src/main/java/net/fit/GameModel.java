@@ -32,7 +32,7 @@ public class GameModel extends Observable {
     }
 
     public boolean canJoin(String ip, int port) {
-        List<SnakesProto.GamePlayer> players = new ArrayList<>(state.getPlayers().getPlayersList());
+        List<SnakesProto.GamePlayer> players = state.getPlayers().getPlayersList();
         for (SnakesProto.GamePlayer player : players) {
             if (player.getIpAddress().equals(ip) && player.getPort() == port)
                 return false;
@@ -40,6 +40,11 @@ public class GameModel extends Observable {
 
         List<SnakesProto.GameState.Snake> snakes = getState().getSnakesList();
         int[][] field = generateIntField(snakes, FillType.FIELD);
+
+        List<SnakesProto.GameState.Coord> foods = state.getFoodsList();
+        for (SnakesProto.GameState.Coord food : foods) {
+            fill(field, food.getX(), food.getY(), -1, FillType.FIELD);
+        }
 
         for (int x = 0; x < config.getHeight(); x++) {
             for (int y = 0; y < config.getWidth(); y++) {
@@ -269,7 +274,7 @@ public class GameModel extends Observable {
 
             SnakesProto.GameState.Coord tail = pointsList.get(pointsList.size() - 1);
             SnakesProto.GameState.Coord absoluteCoord = getTailCoords(pointsList);
-            contestField[(maxX + absoluteCoord.getX()) % maxX][(maxY + absoluteCoord.getY()) % maxY] = 0;
+            fill(contestField, absoluteCoord.getX(), absoluteCoord.getY(), 0, FillType.STRICT);
 
             //Если хвост был сдвиут на одну клетку, удаляем содержащий его узел
             if (Math.abs(tail.getY() + tail.getX()) == 1) {
@@ -317,8 +322,7 @@ public class GameModel extends Observable {
         //Проверка на столкновение "голова-тело"
         int[][] finalContestField = contestField;
         contestPoints.forEach((coord, contestSnakes) -> {
-            if (finalContestField[coord.getX()][coord.getY()] != 0) {
-                System.out.println(Arrays.deepToString(finalContestField));
+            if (finalContestField[coord.getY()][coord.getX()] != 0) {
                 snakes.removeAll(contestSnakes);
                 deadSnakes.addAll(contestSnakes);
             }
@@ -336,6 +340,7 @@ public class GameModel extends Observable {
                     j = nextCoord.getY();
                     continue;
                 }
+
                 xFrom = i;
                 xTo = i + nextCoord.getX();
                 if (xTo < xFrom) {
@@ -343,6 +348,7 @@ public class GameModel extends Observable {
                     xTo *= -1;
                     invertX = true;
                 }
+
                 yFrom = j;
                 yTo = j + nextCoord.getY();
                 if (yTo < yFrom) {
@@ -350,8 +356,9 @@ public class GameModel extends Observable {
                     yTo *= -1;
                     invertY = true;
                 }
+
                 for (int coordX = xFrom; coordX <= xTo; coordX++) {
-                    for (int coordY = yTo; coordY <= j + yFrom; coordY++) {
+                    for (int coordY = yFrom; coordY <= yTo; coordY++) {
                         if (Math.random() < config.getDeadFoodProb()) {
                             food.add(coordBuilder
                                     .setY((maxY + (invertY ? -1 * coordY : coordY)) % maxY)

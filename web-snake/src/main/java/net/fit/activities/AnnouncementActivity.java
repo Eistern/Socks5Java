@@ -19,7 +19,6 @@ public class AnnouncementActivity extends VaryingActivity implements Runnable {
     public void run() {
         try {
             SnakesProto.GameMessage.AnnouncementMsg.Builder builder = SnakesProto.GameMessage.AnnouncementMsg.newBuilder();
-//            socket.setBroadcast(true);
             DatagramPacket packet = new DatagramPacket(new byte[0], 0);
             packet.setAddress(InetAddress.getByName("239.192.0.4"));
             packet.setPort(9192);
@@ -30,7 +29,6 @@ public class AnnouncementActivity extends VaryingActivity implements Runnable {
                         activityLock.wait();
                     }
                 }
-                System.out.println("Send announce...");
                 //IF NEED CAN_JOIN, ADD builder.setCanJoin(model.canJoin()); (not recommended)
                 builder.setPlayers(model.getPlayers());
                 byte[] data = SnakesProto.GameMessage.newBuilder()

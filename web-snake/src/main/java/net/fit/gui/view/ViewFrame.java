@@ -48,9 +48,14 @@ public class ViewFrame extends JFrame implements Observer {
             graphics2D.draw(line);
         }
 
+        float maxBoxWidth = boxWidth * (width - 3);
+        float minBoxWidth = boxWidth * 3;
+        float maxBoxHeight = boxHeight * (height - 3);
+        float minBoxHeight = boxHeight * 3;
+
         graphics2D.setStroke(new BasicStroke(stroke));
         List<SnakesProto.GameState.Snake> snakes = model.getState().getSnakesList();
-        float currentX, currentY;
+        float currentX, currentY, shiftX, shiftY;
         for (SnakesProto.GameState.Snake snake : snakes) {
             graphics2D.setColor(new Color((int) Math.sinh(snake.getPlayerId() + 50) % 0x10000110));
             currentX = -1;
@@ -58,6 +63,8 @@ public class ViewFrame extends JFrame implements Observer {
             Ellipse2D.Float head = null;
             List<SnakesProto.GameState.Coord> coords = snake.getPointsList();
             for (SnakesProto.GameState.Coord coord : coords) {
+                shiftX = 0;
+                shiftY = 0;
                 if (currentX == -1 && currentY == -1) {
                     currentX = (float) ((coord.getX() + 3.5) * boxWidth);
                     currentY = (float) ((coord.getY() + 3.5) * boxHeight);
@@ -65,14 +72,55 @@ public class ViewFrame extends JFrame implements Observer {
                     continue;
                 }
 
+                if (currentX + (coord.getX() * boxWidth) > maxBoxWidth) {
+                    Line2D.Float line = new Line2D.Float(
+                            currentX,
+                            currentY,
+                            maxBoxWidth,
+                            currentY + (coord.getY() * boxHeight));
+                    graphics2D.draw(line);
+                    shiftX = -1 * (maxBoxWidth - currentX);
+                    currentX = minBoxWidth;
+                }
+                if (currentX + (coord.getX() * boxWidth) < minBoxWidth) {
+                    Line2D.Float line = new Line2D.Float(
+                            currentX,
+                            currentY,
+                            minBoxWidth,
+                            currentY + (coord.getY() * boxHeight));
+                    graphics2D.draw(line);
+                    shiftX = (currentX - minBoxWidth);
+                    currentX = maxBoxWidth;
+                }
+                if (currentY + (coord.getY() * boxHeight) > maxBoxHeight) {
+                    Line2D.Float line = new Line2D.Float(
+                            currentX,
+                            currentY,
+                            currentX + (coord.getX() * boxWidth),
+                            maxBoxHeight);
+                    graphics2D.draw(line);
+                    shiftY = -1 * (maxBoxHeight - currentY);
+                    currentY = minBoxHeight;
+                }
+                if (currentY + (coord.getY() * boxHeight) < minBoxHeight) {
+                    Line2D.Float line = new Line2D.Float(
+                            currentX,
+                            currentY,
+                            currentX + (coord.getX() * boxWidth),
+                            minBoxHeight);
+                    graphics2D.draw(line);
+                    shiftY = (currentY - minBoxHeight);
+                    currentY = maxBoxHeight;
+                }
+
                 Line2D.Float line = new Line2D.Float(
                         currentX,
                         currentY,
-                        currentX + (coord.getX() * boxWidth),
-                        currentY + (coord.getY() * boxHeight));
+                        currentX + (coord.getX() * boxWidth) + shiftX,
+                        currentY + (coord.getY() * boxHeight) + shiftY);
                 graphics2D.draw(line);
-                currentX += coord.getX() * boxWidth;
-                currentY += coord.getY() * boxHeight;
+                currentX += coord.getX() * boxWidth + shiftX;
+                currentY += coord.getY() * boxHeight + shiftY;
             }
             graphics2D.setColor(Color.BLACK);
             graphics2D.draw(head);
