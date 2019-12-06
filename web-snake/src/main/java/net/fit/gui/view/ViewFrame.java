@@ -33,8 +33,10 @@ public class ViewFrame extends JFrame implements Observer {
     public void paint(Graphics g) {
         super.paint(g);
         Graphics2D graphics2D = (Graphics2D) g;
-        float width = model.getConfig().getWidth() + 6;
-        float height = model.getConfig().getHeight() + 6;
+
+        SnakesProto.GameState currentState = model.getState();
+        float width = currentState.getConfig().getWidth() + 6;
+        float height = currentState.getConfig().getHeight() + 6;
         float boxWidth = maxWidth / width, boxHeight = maxHeight / height;
         float stroke = Math.max(boxHeight, boxWidth) / 2;
 
@@ -54,7 +56,7 @@ public class ViewFrame extends JFrame implements Observer {
         float minBoxHeight = boxHeight * 3;
 
         graphics2D.setStroke(new BasicStroke(stroke));
-        List<SnakesProto.GameState.Snake> snakes = model.getState().getSnakesList();
+        List<SnakesProto.GameState.Snake> snakes = currentState.getSnakesList();
         float currentX, currentY, shiftX, shiftY;
         for (SnakesProto.GameState.Snake snake : snakes) {
             graphics2D.setColor(new Color((int) Math.sinh(snake.getPlayerId() + 50) % 0x10000110));
@@ -126,7 +128,7 @@ public class ViewFrame extends JFrame implements Observer {
             graphics2D.draw(head);
         }
 
-        List<SnakesProto.GameState.Coord> foods = model.getState().getFoodsList();
+        List<SnakesProto.GameState.Coord> foods = currentState.getFoodsList();
         graphics2D.setColor(Color.RED);
         for (SnakesProto.GameState.Coord coord : foods) {
             currentX = (float) ((coord.getX() + 3.5) * boxWidth);
