@@ -13,11 +13,12 @@ import java.io.IOException;
 public class CreateListener implements ActionListener {
     private final GameModel model;
     private final ThreadManager threadManager;
+    private final int homePort;
 
     @Override
     public void actionPerformed(ActionEvent e) {
         try {
-            model.init(ConfigService.getSystemConfig(), "127.0.0.1", 9192, "Eistern");
+            model.init(ConfigService.getSystemConfig(), "127.0.0.1", homePort, "Eistern");
             threadManager.activateMaster();
         } catch (ClassNotFoundException | IOException ex) {
             ex.printStackTrace();

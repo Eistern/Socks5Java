@@ -13,8 +13,6 @@ import java.util.Observable;
 import java.util.Observer;
 
 public class ViewFrame extends JFrame implements Observer {
-    private final int maxWidth = 640;
-    private final int maxHeight = 480;
     private final GameModel model;
 
     public ViewFrame(GameModel model, NetworkManager manager) {
@@ -22,8 +20,9 @@ public class ViewFrame extends JFrame implements Observer {
         this.model = model;
 
         setBackground(Color.WHITE);
+        int maxHeight = 480;
+        int maxWidth = 640;
         setSize(maxWidth, maxHeight);
-        setResizable(false);
         setDefaultCloseOperation(EXIT_ON_CLOSE);
         addKeyListener(new ButtonListener(model, manager));
 
@@ -32,6 +31,8 @@ public class ViewFrame extends JFrame implements Observer {
 
     public void paint(Graphics g) {
         super.paint(g);
+        int maxWidth = getWidth();
+        int maxHeight = getHeight();
         Graphics2D graphics2D = (Graphics2D) g;
         float width = model.getConfig().getWidth() + 6;
         float height = model.getConfig().getHeight() + 6;

@@ -2,17 +2,15 @@ package net.fit.thread;
 
 import net.fit.AnnouncementHolder;
 import net.fit.GameModel;
-import net.fit.activities.AnnouncementActivity;
-import net.fit.activities.DatagramListener;
-import net.fit.activities.GameIterationActivity;
-import net.fit.activities.NetworkManager;
+import net.fit.activities.*;
 import net.fit.gui.connection.ConnectFrame;
 import net.fit.gui.view.ViewFrame;
 
+import java.net.DatagramSocket;
 import java.net.MulticastSocket;
 
 public class ThreadManager {
-    private final MulticastSocket multicastSocket;
+    private final DatagramSocket datagramSocket;
     private final GameModel model;
     private final DatagramListener datagramListener;
     private final NetworkManager networkManager;
@@ -25,19 +23,22 @@ public class ThreadManager {
         CLIENT, MASTER, NONE, PAUSED
     }
 
-    public ThreadManager(MulticastSocket multicastSocket, GameModel model, AnnouncementHolder datagramAnnouncements) {
-        this.multicastSocket = multicastSocket;
+    public ThreadManager(MulticastSocket multicastSocket, DatagramSocket datagramSocket, GameModel model, AnnouncementHolder datagramAnnouncements, int currentPort) {
+        this.datagramSocket = datagramSocket;
         this.model = model;
 
-        this.networkManager = new NetworkManager(multicastSocket, model);
-        this.datagramListener = new DatagramListener(model, this.networkManager, multicastSocket, datagramAnnouncements, this);
+        this.networkManager = new NetworkManager(datagramSocket, model);
+        this.datagramListener = new DatagramListener(model, this.networkManager, datagramSocket, this);
+        AnnouncementListener announcementListener = new AnnouncementListener(multicastSocket, datagramAnnouncements);
 
         Thread networkManagerThread = new Thread(this.networkManager, "Sender");
         Thread datagramListenerThread = new Thread(this.datagramListener, "Listener");
+        Thread announcementListenerThread = new Thread(announcementListener, "Announcement Listener");
         networkManagerThread.start();
         datagramListenerThread.start();
+        announcementListenerThread.start();
 
-        ConnectFrame frame = new ConnectFrame(networkManager, datagramAnnouncements, model, this);
+        ConnectFrame frame = new ConnectFrame(networkManager, datagramAnnouncements, model, this, currentPort);
         frame.setVisible(true);
 
         ViewFrame viewFrame = new ViewFrame(model, this.networkManager);
@@ -67,7 +68,7 @@ public class ThreadManager {
         }
         if (previousState == State.NONE || (announcementActivity == null && gameIterationActivity == null)) {
             this.gameIterationActivity = new GameIterationActivity(model, datagramListener);
-            this.announcementActivity = new AnnouncementActivity(multicastSocket, model, networkManager);
+            this.announcementActivity = new AnnouncementActivity(datagramSocket, model, networkManager);
             Thread gameIterationThread = new Thread(this.gameIterationActivity, "GameIteration");
             Thread announcementThread = new Thread(this.announcementActivity, "Announcement");
             gameIterationThread.start();
