@@ -10,7 +10,7 @@ import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.SocketAddress;
-import java.util.Date;
+import java.util.*;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -60,6 +60,29 @@ public class NetworkManager implements Runnable {
             } catch (InterruptedException | IOException e) {
                 e.printStackTrace();
             }
+        }
+    }
+
+    public class ResendActivity implements Runnable, Observer {
+        private Map<SnakesProto.GamePlayer, BlockingQueue<Message>> pendingRequests = new HashMap<>();
+
+        @Override
+        public void run() {
+            while (true) {
+                SnakesProto.GameConfig config = model.getConfig();
+                try {
+                    Thread.sleep(config.getPingDelayMs());
+                    //pendingRequests.values().forEach();
+                } catch (InterruptedException e) {
+                    System.err.println("Resend thread was interrupted...");
+                }
+
+            }
+        }
+
+        @Override
+        public void update(Observable o, Object arg) {
+
         }
     }
 

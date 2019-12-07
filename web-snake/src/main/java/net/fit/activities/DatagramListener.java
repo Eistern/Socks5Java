@@ -68,7 +68,8 @@ public class DatagramListener implements Runnable {
                         networkManager.confirm(message.getMsgSeq());
                         break;
                     case STATE:
-                        model.updateState(message.getState().getState());
+                        System.out.println("RECEIVED STATE FROM: " + packet.getSocketAddress());
+                        model.updateState(message.getState().getState(), packet.getSocketAddress());
                         break;
                     case STEER:
                         int id = model.idByIpAndPort(packet.getAddress().getHostAddress(), packet.getPort());
@@ -85,6 +86,7 @@ public class DatagramListener implements Runnable {
                             default:
                                 System.out.println("Got :" + message);
                         }
+                        break;
                     case TYPE_NOT_SET:
                     default:
                         System.err.println("Received unknown type :" + message);

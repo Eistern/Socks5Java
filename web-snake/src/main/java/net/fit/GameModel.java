@@ -18,8 +18,17 @@ public class GameModel extends Observable {
     private final Object stateLock = new Object();
     private SnakesProto.GameConfig config;
     private SnakesProto.GameState state;
+    private SocketAddress host;
     private int freeX;
     private int freeY;
+
+    public synchronized SnakesProto.GameConfig getConfig() {
+        return config;
+    }
+
+    public synchronized SnakesProto.GameState getState() {
+        return state;
+    }
 
     public void init(SnakesProto.GameConfig config) {
         this.config = config;
@@ -46,7 +55,7 @@ public class GameModel extends Observable {
                 return false;
         }
 
-        List<SnakesProto.GameState.Snake> snakes = getState().getSnakesList();
+        List<SnakesProto.GameState.Snake> snakes = state.getSnakesList();
         int[][] field = generateIntField(snakes, FillType.FIELD);
 
         List<SnakesProto.GameState.Coord> foods = state.getFoodsList();
@@ -142,17 +151,7 @@ public class GameModel extends Observable {
     }
 
     public SnakesProto.GamePlayers getPlayers() {
-        return state.getPlayers();
-    }
-
-    public SocketAddress getHost() {
-        List<SnakesProto.GamePlayer> players = new ArrayList<>(state.getPlayers().getPlayersList());
-        SnakesProto.GamePlayer master = players.parallelStream().filter(player -> player.getRole() == SnakesProto.NodeRole.MASTER).findFirst().orElse(null);
-        if (master == null) {
-            System.out.println("No master");
-            return null;
-        }
-        return new InetSocketAddress(master.getIpAddress(), master.getPort());
+        return state.getPlayers().toBuilder().build();
     }
 
     public synchronized SnakesProto.GameMessage.RoleChangeMsg addPlayer(String name, int port, String ip) {
@@ -203,7 +202,8 @@ public class GameModel extends Observable {
         return SnakesProto.GameMessage.RoleChangeMsg.newBuilder().setSenderRole(SnakesProto.NodeRole.MASTER).setReceiverRole(nextRole).build();
     }
 
-    public synchronized void updateState(SnakesProto.GameState nextState) {
+    public synchronized void updateState(SnakesProto.GameState nextState, SocketAddress hostAddress) {
+        this.host = hostAddress;
         if (nextState.getStateOrder() > state.getStateOrder()) {
             this.state = nextState;
             this.config = nextState.getConfig();

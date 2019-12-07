@@ -66,7 +66,7 @@ public class ThreadManager {
             pingActivity.stopActivity();
         }
         if (previousState == State.NONE || (announcementActivity == null && gameIterationActivity == null)) {
-            this.gameIterationActivity = new GameIterationActivity(model, datagramListener);
+            this.gameIterationActivity = new GameIterationActivity(model, datagramListener, networkManager);
             this.announcementActivity = new AnnouncementActivity(multicastSocket, model, networkManager);
             Thread gameIterationThread = new Thread(this.gameIterationActivity, "GameIteration");
             Thread announcementThread = new Thread(this.announcementActivity, "Announcement");
