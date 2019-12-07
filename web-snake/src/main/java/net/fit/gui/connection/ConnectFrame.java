@@ -14,7 +14,7 @@ public class ConnectFrame extends JFrame {
     private JButton connectButton;
     private JButton createButton;
 
-    public ConnectFrame(NetworkManager manager, AnnouncementHolder datagramAnnouncement, GameModel model, ThreadManager threadManager) {
+    public ConnectFrame(NetworkManager manager, AnnouncementHolder datagramAnnouncement, GameModel model, ThreadManager threadManager, int currentPort) {
         super("Current Games");
 
         JPanel pnPanel0 = new JPanel();
@@ -78,7 +78,7 @@ public class ConnectFrame extends JFrame {
         gbPanel0.setConstraints(connectButton, gbcPanel0);
         pnPanel0.add(connectButton);
 
-        CreateListener createListener = new CreateListener(model, threadManager);
+        CreateListener createListener = new CreateListener(model, threadManager, currentPort);
         createButton = new JButton("Create game");
         createButton.addActionListener(createListener);
         pnPanel1.add(createButton);
@@ -87,7 +87,7 @@ public class ConnectFrame extends JFrame {
 
         setContentPane(pnPanel0);
         pack();
-        setSize(240, 180);
+        setSize(360, 240);
         setVisible(true);
     }
 }

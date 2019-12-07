@@ -9,10 +9,7 @@ import net.fit.proto.SnakesProto;
 import net.fit.thread.ThreadManager;
 
 import java.io.IOException;
-import java.net.DatagramPacket;
-import java.net.InetAddress;
-import java.net.InetSocketAddress;
-import java.net.MulticastSocket;
+import java.net.*;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
@@ -21,18 +18,12 @@ import java.util.Map;
 public class DatagramListener implements Runnable {
     private final GameModel model;
     private final NetworkManager networkManager;
-    private final MulticastSocket socket;
-    private final AnnouncementHolder announcementHolder;
+    private final DatagramSocket socket;
     private final ThreadManager threadManager;
     @Getter private Map<Integer, SnakesProto.Direction> recentDirections = new HashMap<>();
 
     @Override
     public void run() {
-        try {
-            socket.joinGroup(InetAddress.getByName("239.192.0.4"));
-        } catch (IOException e) {
-            System.err.println("Unknown host name for group address, can't receive Announcement messages");
-        }
         byte[] data = new byte[2048];
         DatagramPacket packet = new DatagramPacket(data, data.length);
         SnakesProto.GameMessage.AckMsg.Builder ackBuilder = SnakesProto.GameMessage.AckMsg.newBuilder();
@@ -43,9 +34,6 @@ public class DatagramListener implements Runnable {
                 socket.receive(packet);
                 message = SnakesProto.GameMessage.parseFrom(Arrays.copyOf(packet.getData(), packet.getLength()));
                 switch (message.getTypeCase()) {
-                    case ANNOUNCEMENT:
-                        announcementHolder.addAnnouncement(message.getAnnouncement(), (InetSocketAddress) packet.getSocketAddress());
-                        break;
                     case JOIN:
                         if (!model.canJoin(packet.getAddress().getHostAddress(), packet.getPort())) {
                             networkManager.commit(SnakesProto.GameMessage.newBuilder()
