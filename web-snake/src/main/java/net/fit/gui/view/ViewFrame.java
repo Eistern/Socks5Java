@@ -11,6 +11,7 @@ import java.awt.geom.Line2D;
 import java.util.List;
 import java.util.Observable;
 import java.util.Observer;
+import java.util.Random;
 
 public class ViewFrame extends JFrame implements Observer {
     private final GameModel model;
@@ -60,7 +61,8 @@ public class ViewFrame extends JFrame implements Observer {
         List<SnakesProto.GameState.Snake> snakes = currentState.getSnakesList();
         float currentX, currentY, shiftX, shiftY;
         for (SnakesProto.GameState.Snake snake : snakes) {
-            graphics2D.setColor(new Color((int) Math.sinh(snake.getPlayerId() + 50) % 0x10000110));
+            Random generator = new Random(snake.getPlayerId());
+            graphics2D.setColor(new Color(generator.nextFloat(), generator.nextFloat(), generator.nextFloat()));
             currentX = -1;
             currentY = -1;
             Ellipse2D.Float head = null;

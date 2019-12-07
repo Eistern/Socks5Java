@@ -26,7 +26,7 @@ public class GameModel extends Observable {
         return config;
     }
 
-    public synchronized SnakesProto.GameState getState() {
+    public SnakesProto.GameState getState() {
         return state;
     }
 
