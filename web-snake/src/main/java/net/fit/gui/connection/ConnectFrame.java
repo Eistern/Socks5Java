@@ -64,7 +64,7 @@ public class ConnectFrame extends JFrame {
         gbPanel0.setConstraints(pnPanel1, gbcPanel0);
         pnPanel0.add(pnPanel1);
 
-        ConnectListener connectListener = new ConnectListener(gameList, manager);
+        ConnectListener connectListener = new ConnectListener(gameList, manager, threadManager);
         connectButton = new JButton("Connect");
         connectButton.addActionListener(connectListener);
         gbcPanel0.gridx = 0;

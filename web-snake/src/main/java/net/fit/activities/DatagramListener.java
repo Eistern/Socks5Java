@@ -56,7 +56,7 @@ public class DatagramListener implements Runnable {
                         networkManager.confirm(message.getMsgSeq());
                         break;
                     case STATE:
-                        System.out.println("RECEIVED STATE FROM: " + packet.getSocketAddress());
+//                        System.out.println("RECEIVED STATE FROM: " + packet.getSocketAddress());
                         model.updateState(message.getState().getState(), packet.getSocketAddress());
                         break;
                     case STEER:
@@ -67,6 +67,8 @@ public class DatagramListener implements Runnable {
                         ErrorBox.showError(message.getError().getErrorMessage());
                         break;
                     case PING:
+                        System.out.println("GOT PING FROM " + packet.getSocketAddress());
+                        break;
                     case ROLE_CHANGE:
                         switch (message.getRoleChange().getReceiverRole()) {
                             case MASTER:
@@ -80,6 +82,7 @@ public class DatagramListener implements Runnable {
                         System.err.println("Received unknown type :" + message);
                 }
                 if (message.getTypeCase() != SnakesProto.GameMessage.TypeCase.ACK && message.getTypeCase() != SnakesProto.GameMessage.TypeCase.ANNOUNCEMENT) {
+//                    System.out.println("SENDING ACK FOR " + message);
                     networkManager.commit(ackMessageBuilder.setMsgSeq(message.getMsgSeq()).build(), packet.getSocketAddress());
                 }
             } catch (IOException | InterruptedException e) {

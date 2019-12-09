@@ -31,7 +31,7 @@ public class AnnouncementListener implements Runnable {
                 message = SnakesProto.GameMessage.parseFrom(Arrays.copyOf(packet.getData(), packet.getLength()));
                 switch (message.getTypeCase()) {
                     case ANNOUNCEMENT:
-                        System.out.println("GOT ANNOUNCEMENT FROM: " + packet.getSocketAddress());
+//                        System.out.println("GOT ANNOUNCEMENT FROM: " + packet.getSocketAddress());
                         announcementHolder.addAnnouncement(message.getAnnouncement(), (InetSocketAddress) packet.getSocketAddress());
                         break;
                     default:

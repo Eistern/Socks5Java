@@ -17,12 +17,12 @@ public class ButtonListener implements KeyListener {
     private SnakesProto.GameMessage.Builder messageBuilder = SnakesProto.GameMessage.newBuilder();
 
     @Override
-    public void keyTyped(KeyEvent e) {
-        keyPressed(e);
+    public void keyPressed(KeyEvent e) {
+        keyTyped(e);
     }
 
     @Override
-    public void keyPressed(KeyEvent e) {
+    public void keyTyped(KeyEvent e) {
         SnakesProto.Direction direction = SnakesProto.Direction.RIGHT;
         switch (e.getExtendedKeyCode()) {
             case 37:
@@ -41,6 +41,7 @@ public class ButtonListener implements KeyListener {
                 break;
         }
         try {
+            System.out.println("SENDING STEER TO " + model.getHost());
             networkManager.commit(messageBuilder
                     .setMsgSeq(networkManager.getSequenceNum())
                     .setSteer(steerBuilder.setDirection(direction)).build(), model.getHost());

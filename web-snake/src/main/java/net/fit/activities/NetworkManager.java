@@ -28,6 +28,7 @@ public class NetworkManager implements Runnable {
     private long sequenceNum = 0;
     private BlockingQueue<Message> messageQueue = new LinkedBlockingQueue<>();
     @Getter private PingActivity pingActivity = new PingActivity();
+    private ResendActivity resendActivity = new ResendActivity();
     private final DatagramSocket socket;
     private final GameModel model;
 
@@ -40,16 +41,19 @@ public class NetworkManager implements Runnable {
     }
 
     public void confirm(long sequence) {
-        messageQueue.removeIf(message -> message.sequence == sequence);
+        resendActivity.confirm(sequence);
     }
 
     @Override
     public void run() {
+        Thread resendThread = new Thread(resendActivity, "Resend");
+        resendThread.start();
+        DatagramPacket packet = new DatagramPacket(new byte[0], 0);
         while (true) {
-            DatagramPacket packet = new DatagramPacket(new byte[0], 0);
             try {
                 Message nextMessage = messageQueue.take();
-                nextMessage.sequence = getSequenceNum();
+                System.out.println("NOW SENDING " + nextMessage.message + " TO " + nextMessage.address);
+                nextMessage.sequence = nextMessage.message.getMsgSeq();
                 nextMessage.timestamp = new Date();
                 byte[] data = nextMessage.message.toBuilder().setMsgSeq(nextMessage.sequence).build().toByteArray();
                 packet.setData(data);
@@ -57,14 +61,26 @@ public class NetworkManager implements Runnable {
                 packet.setSocketAddress(nextMessage.address);
                 socket.send(packet);
                 pingActivity.notifyMessage();
+                if (nextMessage.message.getTypeCase() != SnakesProto.GameMessage.TypeCase.ACK) {
+                    resendActivity.addPending(nextMessage);
+                }
             } catch (InterruptedException | IOException e) {
                 e.printStackTrace();
             }
         }
     }
 
-    public class ResendActivity implements Runnable, Observer {
-        private Map<SnakesProto.GamePlayer, BlockingQueue<Message>> pendingRequests = new HashMap<>();
+    private class ResendActivity implements Runnable {
+        private BlockingQueue<Message> pendingRequests = new LinkedBlockingQueue<>();
+
+        private void addPending(Message message) {
+            if (message.message.getTypeCase() != SnakesProto.GameMessage.TypeCase.JOIN)
+                pendingRequests.add(message);
+        }
+
+        private void confirm(long sequence) {
+            pendingRequests.removeIf(message -> message.sequence == sequence);
+        }
 
         @Override
         public void run() {
@@ -72,17 +88,13 @@ public class NetworkManager implements Runnable {
                 SnakesProto.GameConfig config = model.getConfig();
                 try {
                     Thread.sleep(config.getPingDelayMs());
-                    //pendingRequests.values().forEach();
+                    Message pendingMessage = pendingRequests.take();
+                    commit(pendingMessage.message, pendingMessage.address);
                 } catch (InterruptedException e) {
                     System.err.println("Resend thread was interrupted...");
                 }
 
             }
-        }
-
-        @Override
-        public void update(Observable o, Object arg) {
-
         }
     }
 

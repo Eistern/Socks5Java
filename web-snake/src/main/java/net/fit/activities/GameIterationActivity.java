@@ -31,11 +31,12 @@ public class GameIterationActivity extends VaryingActivity implements Runnable {
                 players.forEach(
                         player -> {
                             try {
-                                if (!player.getIpAddress().equals("127.0.0.1"))
-                                System.out.println("SENDING STATE TO: " + player.getIpAddress());
-                                manager.commit(messageBuilder
-                                        .setState(builder.setState(currentState))
-                                        .setMsgSeq(manager.getSequenceNum()).build(), new InetSocketAddress(player.getIpAddress(), player.getPort()));
+                                if (!player.getIpAddress().equals("127.0.0.1")) {
+//                                    System.out.println("SENDING STATE TO: " + player.getIpAddress());
+                                    manager.commit(messageBuilder
+                                            .setState(builder.setState(currentState))
+                                            .setMsgSeq(manager.getSequenceNum()).build(), new InetSocketAddress(player.getIpAddress(), player.getPort()));
+                                }
                             } catch (InterruptedException e) {
                                 System.err.println("Can't send current state");
                             }

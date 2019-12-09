@@ -30,6 +30,21 @@ public class GameModel extends Observable {
         return state;
     }
 
+    public synchronized SocketAddress getHost() {
+        if (host == null) {
+            SocketAddress result;
+            SnakesProto.GamePlayer master = state.getPlayers().getPlayersList().parallelStream().filter(player -> player.getRole() == SnakesProto.NodeRole.MASTER).findFirst().orElse(null);
+            if (master != null) {
+                result = new InetSocketAddress(master.getIpAddress(), master.getPort());
+                host = result;
+            }
+            return host;
+        }
+        else {
+            return host;
+        }
+    }
+
     public void init(SnakesProto.GameConfig config) {
         this.config = config;
         SnakesProto.GameState.Builder builder = SnakesProto.GameState.newBuilder();
