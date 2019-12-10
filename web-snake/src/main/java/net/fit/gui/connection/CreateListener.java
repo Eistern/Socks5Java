@@ -18,7 +18,7 @@ public class CreateListener implements ActionListener {
     @Override
     public void actionPerformed(ActionEvent e) {
         try {
-            model.init(ConfigService.getSystemConfig(), "127.0.0.1", homePort, "Eistern");
+            model.init(ConfigService.getSystemConfig(), "127.0.0.1", homePort, "Eistern_init_host");
             threadManager.activateMaster();
         } catch (ClassNotFoundException | IOException ex) {
             ex.printStackTrace();

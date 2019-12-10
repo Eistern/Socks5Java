@@ -2,14 +2,14 @@ package net.fit.activities;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
-import net.fit.AnnouncementHolder;
 import net.fit.GameModel;
 import net.fit.gui.error.ErrorBox;
 import net.fit.proto.SnakesProto;
 import net.fit.thread.ThreadManager;
 
 import java.io.IOException;
-import java.net.*;
+import java.net.DatagramPacket;
+import java.net.DatagramSocket;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
@@ -33,6 +33,9 @@ public class DatagramListener implements Runnable {
             try {
                 socket.receive(packet);
                 message = SnakesProto.GameMessage.parseFrom(Arrays.copyOf(packet.getData(), packet.getLength()));
+                if (message.getTypeCase() != SnakesProto.GameMessage.TypeCase.ACK && message.getTypeCase() != SnakesProto.GameMessage.TypeCase.ANNOUNCEMENT) {
+                    networkManager.commit(ackMessageBuilder.setMsgSeq(message.getMsgSeq()).build(), packet.getSocketAddress());
+                }
                 switch (message.getTypeCase()) {
                     case JOIN:
                         if (!model.canJoin(packet.getAddress().getHostAddress(), packet.getPort())) {
@@ -56,7 +59,6 @@ public class DatagramListener implements Runnable {
                         networkManager.confirm(message.getMsgSeq());
                         break;
                     case STATE:
-//                        System.out.println("RECEIVED STATE FROM: " + packet.getSocketAddress());
                         model.updateState(message.getState().getState(), packet.getSocketAddress());
                         break;
                     case STEER:
@@ -73,17 +75,22 @@ public class DatagramListener implements Runnable {
                         switch (message.getRoleChange().getReceiverRole()) {
                             case MASTER:
                                 threadManager.activateMaster();
+                                break;
+                            case NORMAL:
+                            case DEPUTY:
+                                threadManager.activateClient();
+                                break;
+                            case VIEWER:
+                                threadManager.pauseActivities();
+                                break;
                             default:
                                 System.out.println("Got :" + message);
                         }
+                        model.setRole(message.getRoleChange().getReceiverRole());
                         break;
                     case TYPE_NOT_SET:
                     default:
                         System.err.println("Received unknown type :" + message);
-                }
-                if (message.getTypeCase() != SnakesProto.GameMessage.TypeCase.ACK && message.getTypeCase() != SnakesProto.GameMessage.TypeCase.ANNOUNCEMENT) {
-//                    System.out.println("SENDING ACK FOR " + message);
-                    networkManager.commit(ackMessageBuilder.setMsgSeq(message.getMsgSeq()).build(), packet.getSocketAddress());
                 }
             } catch (IOException | InterruptedException e) {
                 e.printStackTrace();

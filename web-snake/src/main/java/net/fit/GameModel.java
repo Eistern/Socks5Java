@@ -15,9 +15,9 @@ import java.util.stream.Collectors;
 @Data
 @NoArgsConstructor
 public class GameModel extends Observable {
-    private final Object stateLock = new Object();
     private SnakesProto.GameConfig config;
     private SnakesProto.GameState state;
+    private SnakesProto.NodeRole role;
     private SocketAddress host;
     private int freeX;
     private int freeY;
@@ -47,6 +47,7 @@ public class GameModel extends Observable {
 
     public void init(SnakesProto.GameConfig config) {
         this.config = config;
+        this.role = SnakesProto.NodeRole.MASTER;
         SnakesProto.GameState.Builder builder = SnakesProto.GameState.newBuilder();
 
         List<SnakesProto.GamePlayer> players = new ArrayList<>();
@@ -177,8 +178,7 @@ public class GameModel extends Observable {
         SnakesProto.NodeRole nextRole = SnakesProto.NodeRole.NORMAL;
         if (players.size() == 0) {
             nextRole = SnakesProto.NodeRole.MASTER;
-        }
-        if (players.size() == 1) {
+        } else if (players.parallelStream().noneMatch(player -> player.getRole() == SnakesProto.NodeRole.DEPUTY)) {
             nextRole = SnakesProto.NodeRole.DEPUTY;
         }
 
@@ -215,6 +215,16 @@ public class GameModel extends Observable {
             return null;
         }
         return SnakesProto.GameMessage.RoleChangeMsg.newBuilder().setSenderRole(SnakesProto.NodeRole.MASTER).setReceiverRole(nextRole).build();
+    }
+
+    public SnakesProto.GamePlayer reelectDeputy() {
+        List<SnakesProto.GamePlayer> currentPlayers = new ArrayList<>(state.getPlayers().getPlayersList());
+        SnakesProto.GamePlayer candidate = currentPlayers.parallelStream().filter(player -> player.getRole() != SnakesProto.NodeRole.MASTER && player.getRole() != SnakesProto.NodeRole.VIEWER).findFirst().orElse(null);
+        if (candidate != null) {
+            currentPlayers.remove(candidate);
+            currentPlayers.add(candidate.toBuilder().setRole(SnakesProto.NodeRole.DEPUTY).build());
+        }
+        return candidate;
     }
 
     public synchronized void updateState(SnakesProto.GameState nextState, SocketAddress hostAddress) {
@@ -358,6 +368,7 @@ public class GameModel extends Observable {
         //Закончили двигать змеек (были изменены списки snakes и food)
 
         //Начинаем удалять змеек
+        List<Integer> deadPlayerIds = new ArrayList<>();
         List<SnakesProto.GameState.Snake> deadSnakes = new ArrayList<>();
 
         //Проверка на столкновение "голова-тело"
@@ -367,6 +378,7 @@ public class GameModel extends Observable {
                 scoreMap.put(finalContestField[coord.getY()][coord.getX()], scoreMap.get(finalContestField[coord.getY()][coord.getX()]) + contestSnakes.size());
                 snakes.removeAll(contestSnakes);
                 deadSnakes.addAll(contestSnakes);
+                deadPlayerIds.addAll(contestSnakes.parallelStream().map(SnakesProto.GameState.Snake::getPlayerId).collect(Collectors.toCollection(ArrayList::new)));
             }
         });
 
@@ -375,6 +387,7 @@ public class GameModel extends Observable {
             if (contestSnakes.size() > 1) {
                 snakes.removeAll(contestSnakes);
                 deadSnakes.addAll(contestSnakes);
+                deadPlayerIds.addAll(contestSnakes.parallelStream().map(SnakesProto.GameState.Snake::getPlayerId).collect(Collectors.toCollection(ArrayList::new)));
             }
         });
 
@@ -409,10 +422,12 @@ public class GameModel extends Observable {
 
                 for (int coordX = xFrom; coordX <= xTo; coordX++) {
                     for (int coordY = yFrom; coordY <= yTo; coordY++) {
-                        if (Math.random() < config.getDeadFoodProb()) {
+                        int Y = (maxY + (invertY ? -1 * coordY : coordY)) % maxY;
+                        int X = (maxX + (invertX ? -1 * coordX : coordX)) % maxX;
+                        if (Math.random() < config.getDeadFoodProb() && contestField[Y][X] == 0) {
                             food.add(coordBuilder
-                                    .setY((maxY + (invertY ? -1 * coordY : coordY)) % maxY)
-                                    .setX((maxX + (invertX ? -1 * coordX : coordX)) % maxX)
+                                    .setY(Y)
+                                    .setX(X)
                                     .build());
                         }
                     }
@@ -438,8 +453,20 @@ public class GameModel extends Observable {
             }
         }
 
-        //TODO Обновлять счет игроков
+        List<SnakesProto.GamePlayer> deadPlayers = new ArrayList<>();
+        List<SnakesProto.GamePlayer> updatedPlayers = new ArrayList<>();
+        players.forEach(player -> {
+            SnakesProto.GamePlayer.Builder playerBuilder = player.toBuilder();
+            if (deadPlayerIds.contains(player.getId())) {
+                deadPlayers.add(player);
+                playerBuilder.setRole(SnakesProto.NodeRole.VIEWER);
+            }
+            playerBuilder.setScore(scoreMap.get(player.getId()));
+            updatedPlayers.add(playerBuilder.build());
+        });
 
+        builder.clearPlayers();
+        builder.setPlayers(SnakesProto.GamePlayers.newBuilder().addAllPlayers(updatedPlayers).build());
         builder.clearSnakes();
         builder.addAllSnakes(snakes);
         builder.clearFoods();

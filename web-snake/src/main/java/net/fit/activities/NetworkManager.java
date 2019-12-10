@@ -9,6 +9,7 @@ import net.fit.proto.SnakesProto;
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
+import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.util.*;
 import java.util.concurrent.BlockingQueue;
@@ -28,7 +29,7 @@ public class NetworkManager implements Runnable {
     private long sequenceNum = 0;
     private BlockingQueue<Message> messageQueue = new LinkedBlockingQueue<>();
     @Getter private PingActivity pingActivity = new PingActivity();
-    private ResendActivity resendActivity = new ResendActivity();
+    private final ResendActivity resendActivity = new ResendActivity();
     private final DatagramSocket socket;
     private final GameModel model;
 
@@ -70,8 +71,22 @@ public class NetworkManager implements Runnable {
         }
     }
 
+    private class DisconnectActivity implements Runnable {
+
+        @Override
+        public void run() {
+            while (true) {
+
+            }
+        }
+    }
+
     private class ResendActivity implements Runnable {
         private BlockingQueue<Message> pendingRequests = new LinkedBlockingQueue<>();
+
+        public void updateMaster(InetSocketAddress masterAddr) {
+            pendingRequests.forEach(message -> message.address = masterAddr);
+        }
 
         private void addPending(Message message) {
             if (message.message.getTypeCase() != SnakesProto.GameMessage.TypeCase.JOIN)

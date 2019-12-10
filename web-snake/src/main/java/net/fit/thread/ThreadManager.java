@@ -4,6 +4,7 @@ import net.fit.AnnouncementHolder;
 import net.fit.GameModel;
 import net.fit.activities.*;
 import net.fit.gui.connection.ConnectFrame;
+import net.fit.gui.score.ScoreFrame;
 import net.fit.gui.view.ViewFrame;
 
 import java.net.DatagramSocket;
@@ -43,6 +44,9 @@ public class ThreadManager {
 
         ViewFrame viewFrame = new ViewFrame(model, this.networkManager);
         viewFrame.setVisible(true);
+
+        ScoreFrame scoreFrame = new ScoreFrame(model);
+        scoreFrame.setVisible(true);
     }
 
     public synchronized void pauseActivities() {
