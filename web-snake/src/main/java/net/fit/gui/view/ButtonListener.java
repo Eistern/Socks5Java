@@ -7,7 +7,6 @@ import net.fit.proto.SnakesProto;
 
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
-import java.net.InetSocketAddress;
 
 @RequiredArgsConstructor
 public class ButtonListener implements KeyListener {
@@ -23,6 +22,8 @@ public class ButtonListener implements KeyListener {
 
     @Override
     public void keyTyped(KeyEvent e) {
+        if (model.getRole() == SnakesProto.NodeRole.VIEWER)
+            return;
         SnakesProto.Direction direction = SnakesProto.Direction.RIGHT;
         switch (e.getExtendedKeyCode()) {
             case 37:

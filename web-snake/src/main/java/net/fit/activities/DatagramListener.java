@@ -10,6 +10,7 @@ import net.fit.thread.ThreadManager;
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
+import java.net.InetSocketAddress;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
@@ -33,9 +34,6 @@ public class DatagramListener implements Runnable {
             try {
                 socket.receive(packet);
                 message = SnakesProto.GameMessage.parseFrom(Arrays.copyOf(packet.getData(), packet.getLength()));
-                if (message.getTypeCase() != SnakesProto.GameMessage.TypeCase.ACK && message.getTypeCase() != SnakesProto.GameMessage.TypeCase.ANNOUNCEMENT) {
-                    networkManager.commit(ackMessageBuilder.setMsgSeq(message.getMsgSeq()).build(), packet.getSocketAddress());
-                }
                 switch (message.getTypeCase()) {
                     case JOIN:
                         if (!model.canJoin(packet.getAddress().getHostAddress(), packet.getPort())) {
@@ -59,7 +57,10 @@ public class DatagramListener implements Runnable {
                         networkManager.confirm(message.getMsgSeq());
                         break;
                     case STATE:
-                        model.updateState(message.getState().getState(), packet.getSocketAddress());
+                        model.updateState(message.getState().getState(), (InetSocketAddress) packet.getSocketAddress());
+                        if (model.getOwnId() == -1) {
+                            model.resolveOwnId();
+                        }
                         break;
                     case STEER:
                         int id = model.idByIpAndPort(packet.getAddress().getHostAddress(), packet.getPort());
@@ -74,14 +75,29 @@ public class DatagramListener implements Runnable {
                     case ROLE_CHANGE:
                         switch (message.getRoleChange().getReceiverRole()) {
                             case MASTER:
-                                threadManager.activateMaster();
+                                boolean masterModel = model.becomeMaster(message.getSenderId(), packet.getSocketAddress());
+                                if (masterModel) {
+                                    SnakesProto.GamePlayer deputy = model.reelectDeputy();
+                                    if (deputy != null) {
+                                        networkManager.commit(
+                                                SnakesProto.GameMessage.newBuilder()
+                                                        .setSenderId(model.getOwnId())
+                                                        .setReceiverId(deputy.getId())
+                                                        .setRoleChange(SnakesProto.GameMessage.RoleChangeMsg.newBuilder()
+                                                                .setReceiverRole(SnakesProto.NodeRole.DEPUTY)
+                                                                .setSenderRole(SnakesProto.NodeRole.MASTER)
+                                                                .build())
+                                                        .build(), new InetSocketAddress(deputy.getIpAddress(), deputy.getPort()));
+                                    }
+                                    threadManager.activateMaster();
+                                }
                                 break;
                             case NORMAL:
+                                if (message.getRoleChange().getSenderRole() == SnakesProto.NodeRole.MASTER)
+                                    model.setHost((InetSocketAddress) packet.getSocketAddress());
                             case DEPUTY:
-                                threadManager.activateClient();
-                                break;
                             case VIEWER:
-                                threadManager.pauseActivities();
+                                threadManager.activateClient();
                                 break;
                             default:
                                 System.out.println("Got :" + message);
@@ -91,6 +107,14 @@ public class DatagramListener implements Runnable {
                     case TYPE_NOT_SET:
                     default:
                         System.err.println("Received unknown type :" + message);
+                }
+                if (message.getTypeCase() != SnakesProto.GameMessage.TypeCase.ACK && message.getTypeCase() != SnakesProto.GameMessage.TypeCase.ANNOUNCEMENT) {
+                    System.out.println("Sending ack for " + message);
+                    networkManager.commit(ackMessageBuilder
+                            .setSenderId(model.getOwnId())
+                            .setReceiverId(model.idByIpAndPort(packet.getAddress().getHostAddress(), packet.getPort()))
+                            .setMsgSeq(message.getMsgSeq())
+                            .build(), packet.getSocketAddress());
                 }
             } catch (IOException | InterruptedException e) {
                 e.printStackTrace();

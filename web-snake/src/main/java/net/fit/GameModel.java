@@ -18,7 +18,8 @@ public class GameModel extends Observable {
     private SnakesProto.GameConfig config;
     private SnakesProto.GameState state;
     private SnakesProto.NodeRole role;
-    private SocketAddress host;
+    private InetSocketAddress host;
+    private int ownId = -1;
     private int freeX;
     private int freeY;
 
@@ -32,7 +33,7 @@ public class GameModel extends Observable {
 
     public synchronized SocketAddress getHost() {
         if (host == null) {
-            SocketAddress result;
+            InetSocketAddress result;
             SnakesProto.GamePlayer master = state.getPlayers().getPlayersList().parallelStream().filter(player -> player.getRole() == SnakesProto.NodeRole.MASTER).findFirst().orElse(null);
             if (master != null) {
                 result = new InetSocketAddress(master.getIpAddress(), master.getPort());
@@ -45,7 +46,38 @@ public class GameModel extends Observable {
         }
     }
 
-    public void init(SnakesProto.GameConfig config) {
+    public synchronized boolean becomeMaster(int senderId, SocketAddress address) {
+        if (this.role != SnakesProto.NodeRole.DEPUTY)
+            return false;
+        this.role = SnakesProto.NodeRole.MASTER;
+        List<SnakesProto.GamePlayer> players = new ArrayList<>(state.getPlayers().getPlayersList());
+        SnakesProto.GamePlayer deputy = players.parallelStream().filter(player -> player.getRole() == SnakesProto.NodeRole.DEPUTY).findFirst().orElse(null);
+        if (deputy == null) {
+            return false;
+        }
+        players.remove(deputy);
+        SnakesProto.GamePlayer previousMaster = players.parallelStream().filter(player -> player.getId() == senderId).findFirst().orElse(null);
+        if (previousMaster != null) {
+            InetSocketAddress inetSocketAddress = (InetSocketAddress) address;
+            players.remove(previousMaster);
+            players.add(previousMaster.toBuilder().setIpAddress(inetSocketAddress.getAddress().getHostAddress()).setPort(inetSocketAddress.getPort()).build());
+        }
+        players.add(deputy.toBuilder().setRole(SnakesProto.NodeRole.MASTER).build());
+        this.state = state.toBuilder().setPlayers(SnakesProto.GamePlayers.newBuilder().addAllPlayers(players).build()).build();
+        this.host = null;
+        return true;
+    }
+
+    public synchronized SnakesProto.GamePlayer getDeputy() {
+        SnakesProto.GamePlayer result = null;
+        SnakesProto.GamePlayer deputy = state.getPlayers().getPlayersList().parallelStream().filter(player -> player.getRole() == SnakesProto.NodeRole.DEPUTY).findFirst().orElse(null);
+        if (deputy != null) {
+            result = deputy;
+        }
+        return result;
+    }
+
+    void init(SnakesProto.GameConfig config) {
         this.config = config;
         this.role = SnakesProto.NodeRole.MASTER;
         SnakesProto.GameState.Builder builder = SnakesProto.GameState.newBuilder();
@@ -61,7 +93,13 @@ public class GameModel extends Observable {
     public void init(SnakesProto.GameConfig config, String ip, int port, String name) {
         init(config);
         canJoin(ip, port);
+        this.ownId = 1;
         addPlayer(name, port, ip);
+    }
+
+    public synchronized void resolveOwnId() {
+        List<SnakesProto.GamePlayer> players = new ArrayList<>(state.getPlayers().getPlayersList());
+        players.parallelStream().filter(player -> player.getName().equals("Eistern")).findFirst().ifPresent(self -> this.ownId = self.getId());
     }
 
     public boolean canJoin(String ip, int port) {
@@ -227,8 +265,12 @@ public class GameModel extends Observable {
         return candidate;
     }
 
-    public synchronized void updateState(SnakesProto.GameState nextState, SocketAddress hostAddress) {
-        this.host = hostAddress;
+    public synchronized void updateState(SnakesProto.GameState nextState, InetSocketAddress hostAddress) {
+        if (role == SnakesProto.NodeRole.MASTER)
+            return;
+        if (host == null) {
+            this.host = hostAddress;
+        }
         if (nextState.getStateOrder() > state.getStateOrder()) {
             this.state = nextState;
             this.config = nextState.getConfig();
@@ -240,6 +282,16 @@ public class GameModel extends Observable {
     public synchronized int idByIpAndPort(String ip, int port) {
         System.out.println("Find " + ip + ":" + port);
         List<SnakesProto.GamePlayer> players = new ArrayList<>(state.getPlayers().getPlayersList());
+
+        if (host != null && ip.equals(host.getAddress().getHostAddress()) && port == host.getPort()) {
+            System.out.println("TRY TO FIND MASTER");
+            SnakesProto.GamePlayer result = players.parallelStream().filter(player -> player.getRole() == SnakesProto.NodeRole.MASTER).findFirst().orElse(null);
+            if (result != null) {
+                return result.getId();
+            }
+            return -1;
+        }
+
         SnakesProto.GamePlayer result = players.parallelStream().filter(player -> player.getIpAddress().equals(ip) && player.getPort() == port).findFirst().orElse(null);
         if (result == null) {
             System.out.println("Player not found");
@@ -248,7 +300,7 @@ public class GameModel extends Observable {
         return result.getId();
     }
 
-    public synchronized void iterateState(Map<Integer, SnakesProto.Direction> updateDirection) {
+    public synchronized List<SnakesProto.GamePlayer> iterateState(Map<Integer, SnakesProto.Direction> updateDirection) {
         int maxX = config.getWidth();
         int maxY = config.getHeight();
 
@@ -474,5 +526,7 @@ public class GameModel extends Observable {
         state = builder.build();
         this.setChanged();
         this.notifyObservers();
+
+        return deadPlayers;
     }
 }
