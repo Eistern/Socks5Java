@@ -1,6 +1,7 @@
 package net.fit.gui.connection;
 
 import lombok.RequiredArgsConstructor;
+import net.fit.GameModel;
 import net.fit.activities.NetworkManager;
 import net.fit.proto.SnakesProto;
 import net.fit.thread.ThreadManager;

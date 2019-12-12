@@ -28,7 +28,7 @@ public class ThreadManager {
         this.datagramSocket = datagramSocket;
         this.model = model;
 
-        this.networkManager = new NetworkManager(datagramSocket, model);
+        this.networkManager = new NetworkManager(this, datagramSocket, model);
         this.datagramListener = new DatagramListener(model, this.networkManager, datagramSocket, this);
         AnnouncementListener announcementListener = new AnnouncementListener(multicastSocket, datagramAnnouncements);
 

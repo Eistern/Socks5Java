@@ -82,7 +82,7 @@ public class GameIterationActivity extends VaryingActivity implements Runnable {
                     }
                 }
                 if (masterLost.get()) {
-                    SnakesProto.GamePlayer deputyAddr = model.getDeputy();
+                    SnakesProto.GamePlayer deputyAddr = model.getFirstOfRole(SnakesProto.NodeRole.DEPUTY);
                     if (deputyAddr == null) {
                         deputyAddr = model.reelectDeputy();
                     }

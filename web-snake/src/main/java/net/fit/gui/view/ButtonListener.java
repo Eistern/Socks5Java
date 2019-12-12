@@ -42,10 +42,10 @@ public class ButtonListener implements KeyListener {
                 break;
         }
         try {
-            System.out.println("SENDING STEER TO " + model.getHost());
+            System.out.println("SENDING STEER TO " + model.getHostAddr());
             networkManager.commit(messageBuilder
                     .setMsgSeq(networkManager.getSequenceNum())
-                    .setSteer(steerBuilder.setDirection(direction)).build(), model.getHost());
+                    .setSteer(steerBuilder.setDirection(direction)).build(), model.getHostAddr());
 
         } catch (InterruptedException ex) {
             ex.printStackTrace();
