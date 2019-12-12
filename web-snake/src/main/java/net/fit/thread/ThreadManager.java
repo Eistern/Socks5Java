@@ -42,7 +42,7 @@ public class ThreadManager {
         ConnectFrame frame = new ConnectFrame(networkManager, datagramAnnouncements, model, this, currentPort);
         frame.setVisible(true);
 
-        ViewFrame viewFrame = new ViewFrame(model, this.networkManager);
+        ViewFrame viewFrame = new ViewFrame(model, this.networkManager, this);
         viewFrame.setVisible(true);
 
         ScoreFrame scoreFrame = new ScoreFrame(model);

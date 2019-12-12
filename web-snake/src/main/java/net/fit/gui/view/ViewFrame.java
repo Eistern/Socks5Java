@@ -3,6 +3,7 @@ package net.fit.gui.view;
 import net.fit.GameModel;
 import net.fit.activities.NetworkManager;
 import net.fit.proto.SnakesProto;
+import net.fit.thread.ThreadManager;
 
 import javax.swing.*;
 import java.awt.*;
@@ -16,10 +17,17 @@ import java.util.Random;
 public class ViewFrame extends JFrame implements Observer {
     private final GameModel model;
 
-    public ViewFrame(GameModel model, NetworkManager manager) {
+    public ViewFrame(GameModel model, NetworkManager manager, ThreadManager threadManager) {
         super("Snake");
         this.model = model;
 
+        JMenuBar menuBar = new JMenuBar();
+        JMenu menu = new JMenu("File");
+        JMenuItem menuItem = new JMenuItem("Exit");
+        menuItem.addActionListener(new ExitButtonListener(model, manager, threadManager));
+        menu.add(menuItem);
+        menuBar.add(menu);
+        setJMenuBar(menuBar);
         setBackground(Color.WHITE);
         int maxHeight = 480;
         int maxWidth = 640;
