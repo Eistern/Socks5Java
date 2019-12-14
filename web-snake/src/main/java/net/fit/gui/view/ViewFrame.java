@@ -17,8 +17,8 @@ import java.util.Random;
 public class ViewFrame extends JFrame implements Observer {
     private final GameModel model;
 
-    public ViewFrame(GameModel model, NetworkManager manager, ThreadManager threadManager) {
-        super("Snake");
+    public ViewFrame(GameModel model, NetworkManager manager, ThreadManager threadManager, int currentPort) {
+        super("Snake: " + currentPort);
         this.model = model;
 
         JMenuBar menuBar = new JMenuBar();

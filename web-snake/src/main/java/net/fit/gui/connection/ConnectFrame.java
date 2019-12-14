@@ -15,7 +15,7 @@ public class ConnectFrame extends JFrame {
     private JButton createButton;
 
     public ConnectFrame(NetworkManager manager, AnnouncementHolder datagramAnnouncement, GameModel model, ThreadManager threadManager, int currentPort) {
-        super("Current Games");
+        super("Current Games: " + currentPort);
 
         JPanel pnPanel0 = new JPanel();
         GridBagLayout gbPanel0 = new GridBagLayout();
@@ -64,7 +64,7 @@ public class ConnectFrame extends JFrame {
         gbPanel0.setConstraints(pnPanel1, gbcPanel0);
         pnPanel0.add(pnPanel1);
 
-        ConnectListener connectListener = new ConnectListener(gameList, manager, threadManager);
+        ConnectListener connectListener = new ConnectListener(gameList, manager, model, threadManager, currentPort);
         connectButton = new JButton("Connect");
         connectButton.addActionListener(connectListener);
         gbcPanel0.gridx = 0;

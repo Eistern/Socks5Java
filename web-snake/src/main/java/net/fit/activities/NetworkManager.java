@@ -62,6 +62,8 @@ public class NetworkManager implements Runnable {
         while (true) {
             try {
                 Message nextMessage = messageQueue.take();
+                if (nextMessage.address == null)
+                    continue;
                 System.out.println("NOW SENDING " + nextMessage.message + " TO " + nextMessage.address);
                 nextMessage.sequence = nextMessage.message.getMsgSeq();
                 byte[] data = nextMessage.message.toBuilder().setMsgSeq(nextMessage.sequence).build().toByteArray();

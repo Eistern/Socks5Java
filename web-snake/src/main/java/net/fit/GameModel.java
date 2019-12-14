@@ -89,7 +89,7 @@ public class GameModel extends Observable {
     public void init(SnakesProto.GameConfig config) {
         this.config = config;
         this.hostAddr = null;
-        this.role = SnakesProto.NodeRole.NORMAL;
+        this.role = SnakesProto.NodeRole.MASTER;
         SnakesProto.GameState.Builder builder = SnakesProto.GameState.newBuilder();
 
         List<SnakesProto.GamePlayer> players = new ArrayList<>();
@@ -106,11 +106,6 @@ public class GameModel extends Observable {
         canJoin(ip, port);
         this.ownId = 1;
         addPlayer(name, port, ip);
-    }
-
-    public synchronized void resolveOwnId() {
-        List<SnakesProto.GamePlayer> players = new ArrayList<>(state.getPlayers().getPlayersList());
-        players.parallelStream().filter(player -> player.getName().equals("Eistern")).findFirst().ifPresent(self -> this.ownId = self.getId());
     }
 
     public boolean canJoin(String ip, int port) {
@@ -285,8 +280,10 @@ public class GameModel extends Observable {
     }
 
     public synchronized void updateState(SnakesProto.GameState nextState, InetSocketAddress hostAddress) {
-        if (role == SnakesProto.NodeRole.MASTER)
+        if (role == SnakesProto.NodeRole.MASTER) {
+            System.err.println("SEND update to MASTER");
             return;
+        }
         if (hostAddr == null) {
             this.hostAddr = hostAddress;
         }
@@ -295,6 +292,7 @@ public class GameModel extends Observable {
             this.config = nextState.getConfig();
             this.setChanged();
             this.notifyObservers();
+            System.out.println("State changed");
         }
     }
 

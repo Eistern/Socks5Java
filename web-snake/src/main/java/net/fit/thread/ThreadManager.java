@@ -42,10 +42,10 @@ public class ThreadManager {
         ConnectFrame frame = new ConnectFrame(networkManager, datagramAnnouncements, model, this, currentPort);
         frame.setVisible(true);
 
-        ViewFrame viewFrame = new ViewFrame(model, this.networkManager, this);
+        ViewFrame viewFrame = new ViewFrame(model, this.networkManager, this, currentPort);
         viewFrame.setVisible(true);
 
-        ScoreFrame scoreFrame = new ScoreFrame(model);
+        ScoreFrame scoreFrame = new ScoreFrame(model, currentPort);
         scoreFrame.setVisible(true);
     }
 
@@ -54,10 +54,10 @@ public class ThreadManager {
         if (previousState == State.PAUSED) {
             return;
         }
-        if (previousState == State.CLIENT) {
+        if (pingActivity != null) {
             pingActivity.stopActivity();
         }
-        if (previousState == State.MASTER) {
+        if (gameIterationActivity != null && announcementActivity != null) {
             gameIterationActivity.stopActivity();
             announcementActivity.stopActivity();
         }

@@ -15,6 +15,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
 public class DatagramListener implements Runnable {
@@ -57,12 +58,12 @@ public class DatagramListener implements Runnable {
                         }
                     case ACK:
                         networkManager.confirm(message.getMsgSeq());
+                        if (model.getOwnId() == -1) {
+                            model.setOwnId(message.getReceiverId());
+                        }
                         break;
                     case STATE:
                         model.updateState(message.getState().getState(), (InetSocketAddress) packet.getSocketAddress());
-                        if (model.getOwnId() == -1) {
-                            model.resolveOwnId();
-                        }
                         break;
                     case STEER:
                         int id = model.idByIpAndPort(packet.getAddress().getHostAddress(), packet.getPort());
@@ -124,6 +125,14 @@ public class DatagramListener implements Runnable {
                         System.err.println("Received unknown type :" + message);
                 }
                 if (message.getTypeCase() != SnakesProto.GameMessage.TypeCase.ACK && message.getTypeCase() != SnakesProto.GameMessage.TypeCase.ANNOUNCEMENT) {
+                    List<InetSocketAddress> playersIps = model.getPlayers().getPlayersList().parallelStream().map(gamePlayer -> new InetSocketAddress(gamePlayer.getIpAddress(), gamePlayer.getPort())).collect(Collectors.toList());
+                    InetSocketAddress hostIp = model.getHostAddr();
+                    if (hostIp != null)
+                        playersIps.add(hostIp);
+                    if (!playersIps.isEmpty() && !playersIps.contains((InetSocketAddress) packet.getSocketAddress())) {
+                        System.err.println("Recieved ack by not player");
+                        continue;
+                    }
                     System.out.println("Sending ack for " + message);
                     networkManager.commit(messageBuilder
                             .setSenderId(model.getOwnId())

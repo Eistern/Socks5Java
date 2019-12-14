@@ -6,14 +6,17 @@ import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.awt.event.ActionListener;
+import java.util.Observable;
+import java.util.Observer;
 
-public class ScoreFrame extends JFrame {
-    JPanel pnPanel0;
-    JButton btBut0;
-    JTable tbTable1;
+public class ScoreFrame extends JFrame implements Observer {
+    private RefreshScoreListener listener;
+    private JPanel pnPanel0;
+    private JButton btBut0;
+    private JTable tbTable1;
 
-    public ScoreFrame(GameModel model) {
-        super("Score");
+    public ScoreFrame(GameModel model, int currentPort) {
+        super("Score: " + currentPort);
 
         pnPanel0 = new JPanel();
         GridBagLayout gbPanel0 = new GridBagLayout();
@@ -48,13 +51,19 @@ public class ScoreFrame extends JFrame {
         gbPanel0.setConstraints(scpTable1, gbcPanel0);
         pnPanel0.add(scpTable1);
 
-        ActionListener refreshActionListener = new RefreshScoreListener(tbTable1, model);
-        btBut0.addActionListener(refreshActionListener);
+        listener = new RefreshScoreListener(tbTable1, model);
+        btBut0.addActionListener(listener);
 
         setDefaultCloseOperation(EXIT_ON_CLOSE);
 
         setContentPane(pnPanel0);
         pack();
         setVisible(true);
+        model.addObserver(this);
+    }
+
+    @Override
+    public void update(Observable o, Object arg) {
+        listener.actionPerformed(null);
     }
 }
