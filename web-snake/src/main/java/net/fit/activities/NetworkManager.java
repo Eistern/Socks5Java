@@ -24,6 +24,7 @@ public class NetworkManager implements Runnable {
         private SnakesProto.GameMessage message;
         private SocketAddress address;
         private long sequence;
+        private Date timestamp;
     }
 
     private long sequenceNum = 0;
@@ -40,15 +41,19 @@ public class NetworkManager implements Runnable {
     }
 
     public void commit(SnakesProto.GameMessage message, SocketAddress address) throws InterruptedException {
-        messageQueue.put(new Message(message, address, 0));
+        messageQueue.put(new Message(message, address, 0, null));
+    }
+
+    public void removePendingUsers(List<SnakesProto.GamePlayer> users) {
+        resendActivity.removePendingUsers(users);
     }
 
     public void updateMessage(InetSocketAddress address) {
         disconnectActivity.updateMessage(address);
     }
 
-    public void confirm(long sequence) {
-        resendActivity.confirm(sequence);
+    public void confirm(long sequence, SocketAddress socketAddress) {
+        resendActivity.confirm(sequence, socketAddress);
     }
 
     @Override
@@ -66,6 +71,7 @@ public class NetworkManager implements Runnable {
                     continue;
                 System.out.println("NOW SENDING " + nextMessage.message + " TO " + nextMessage.address);
                 nextMessage.sequence = nextMessage.message.getMsgSeq();
+                nextMessage.timestamp = new Date();
                 byte[] data = nextMessage.message.toBuilder().setMsgSeq(nextMessage.sequence).build().toByteArray();
                 packet.setData(data);
                 packet.setLength(data.length);
@@ -127,9 +133,9 @@ public class NetworkManager implements Runnable {
                     }
 
                     boolean needDeputy = false;
+                    NetworkManager.this.resendActivity.removePendingUsers(removedPlayers);
                     if (currentRole == SnakesProto.NodeRole.MASTER) {
                         model.removePlayers(removedPlayers);
-                        NetworkManager.this.resendActivity.removePendingUsers(removedPlayers);
 
                         for (SnakesProto.GamePlayer removedPlayer : removedPlayers) {
                             if (removedPlayer.getRole() == SnakesProto.NodeRole.DEPUTY) {
@@ -216,8 +222,8 @@ public class NetworkManager implements Runnable {
                 pendingRequests.add(message);
         }
 
-        private void confirm(long sequence) {
-            pendingRequests.removeIf(message -> message.sequence == sequence);
+        private void confirm(long sequence, SocketAddress inetSocketAddress) {
+            pendingRequests.removeIf(message -> message.sequence == sequence && message.address.equals(inetSocketAddress));
         }
 
         @Override
@@ -255,7 +261,9 @@ public class NetworkManager implements Runnable {
             while (true) {
                 try {
                     synchronized (activityLock) {
+                        System.out.println("Check lock: " + activityLock.get());
                         while (!activityLock.get()) {
+                            System.out.println("Now waiting.....(PING)");
                             activityLock.wait();
                         }
                     }

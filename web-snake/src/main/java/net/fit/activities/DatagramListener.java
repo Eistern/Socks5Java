@@ -37,6 +37,7 @@ public class DatagramListener implements Runnable {
                 socket.receive(packet);
                 networkManager.updateMessage((InetSocketAddress) packet.getSocketAddress());
                 message = SnakesProto.GameMessage.parseFrom(Arrays.copyOf(packet.getData(), packet.getLength()));
+                System.out.println("GOT: " + message);
                 switch (message.getTypeCase()) {
                     case JOIN:
                         if (!model.canJoin(packet.getAddress().getHostAddress(), packet.getPort())) {
@@ -57,7 +58,7 @@ public class DatagramListener implements Runnable {
                             }
                         }
                     case ACK:
-                        networkManager.confirm(message.getMsgSeq());
+                        networkManager.confirm(message.getMsgSeq(), packet.getSocketAddress());
                         if (model.getOwnId() == -1) {
                             model.setOwnId(message.getReceiverId());
                         }
@@ -127,6 +128,8 @@ public class DatagramListener implements Runnable {
                 if (message.getTypeCase() != SnakesProto.GameMessage.TypeCase.ACK && message.getTypeCase() != SnakesProto.GameMessage.TypeCase.ANNOUNCEMENT) {
                     List<InetSocketAddress> playersIps = model.getPlayers().getPlayersList().parallelStream().map(gamePlayer -> new InetSocketAddress(gamePlayer.getIpAddress(), gamePlayer.getPort())).collect(Collectors.toList());
                     InetSocketAddress hostIp = model.getHostAddr();
+                    if (!model.isOpenedToAck())
+                        continue;
                     if (hostIp != null)
                         playersIps.add(hostIp);
                     if (!playersIps.isEmpty() && !playersIps.contains((InetSocketAddress) packet.getSocketAddress())) {

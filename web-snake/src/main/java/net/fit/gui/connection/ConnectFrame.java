@@ -2,6 +2,7 @@ package net.fit.gui.connection;
 
 import net.fit.AnnouncementHolder;
 import net.fit.GameModel;
+import net.fit.activities.DatagramListener;
 import net.fit.activities.NetworkManager;
 import net.fit.thread.ThreadManager;
 
@@ -14,7 +15,7 @@ public class ConnectFrame extends JFrame {
     private JButton connectButton;
     private JButton createButton;
 
-    public ConnectFrame(NetworkManager manager, AnnouncementHolder datagramAnnouncement, GameModel model, ThreadManager threadManager, int currentPort) {
+    public ConnectFrame(NetworkManager manager, DatagramListener datagramListener, AnnouncementHolder datagramAnnouncement, GameModel model, ThreadManager threadManager, int currentPort) {
         super("Current Games: " + currentPort);
 
         JPanel pnPanel0 = new JPanel();
@@ -78,7 +79,7 @@ public class ConnectFrame extends JFrame {
         gbPanel0.setConstraints(connectButton, gbcPanel0);
         pnPanel0.add(connectButton);
 
-        CreateListener createListener = new CreateListener(model, threadManager, currentPort);
+        CreateListener createListener = new CreateListener(model, threadManager, currentPort, datagramListener);
         createButton = new JButton("Create game");
         createButton.addActionListener(createListener);
         pnPanel1.add(createButton);

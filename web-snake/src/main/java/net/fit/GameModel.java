@@ -10,7 +10,6 @@ import java.net.SocketAddress;
 import java.util.*;
 import java.util.stream.Collector;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 @EqualsAndHashCode(callSuper = false)
 @Data
@@ -23,6 +22,8 @@ public class GameModel extends Observable {
     private int ownId = -1;
     private int freeX;
     private int freeY;
+    private int nextPlayerId = 1;
+    private boolean openedToAck = false;
 
     public synchronized SnakesProto.GameConfig getConfig() {
         return config;
@@ -56,12 +57,17 @@ public class GameModel extends Observable {
             return;
         List<SnakesProto.GamePlayer> players = new ArrayList<>(this.state.getPlayers().getPlayersList());
         SnakesProto.GamePlayer modifyingPlayer = players.parallelStream().filter(player -> player.getId() == playerId).findFirst().orElse(null);
-        if (modifyingPlayer != null)
+        if (modifyingPlayer != null) {
             if (modifyingPlayer.getRole() != newRole) {
                 players.remove(modifyingPlayer);
-                players.add(modifyingPlayer.toBuilder().setRole(newRole).build());
+                SnakesProto.GamePlayer.Builder playerBuilder = modifyingPlayer.toBuilder().setRole(newRole);
+                if (newRole == SnakesProto.NodeRole.VIEWER) {
+                    playerBuilder.setId(-1);
+                }
+                players.add(playerBuilder.build());
                 this.state = state.toBuilder().setPlayers(SnakesProto.GamePlayers.newBuilder().addAllPlayers(players).build()).build();
             }
+        }
     }
 
     public synchronized boolean becomeMaster(int senderId, SocketAddress address) {
@@ -82,6 +88,7 @@ public class GameModel extends Observable {
         }
         players.add(deputy.toBuilder().setRole(SnakesProto.NodeRole.MASTER).build());
         this.state = state.toBuilder().setPlayers(SnakesProto.GamePlayers.newBuilder().addAllPlayers(players).build()).build();
+        this.nextPlayerId = state.getPlayers().getPlayersList().parallelStream().mapToInt(SnakesProto.GamePlayer::getId).max().orElse(1) + 1;
         this.hostAddr = null;
         return true;
     }
@@ -89,6 +96,8 @@ public class GameModel extends Observable {
     public void init(SnakesProto.GameConfig config) {
         this.config = config;
         this.hostAddr = null;
+        this.nextPlayerId = 1;
+        this.openedToAck = false;
         this.role = SnakesProto.NodeRole.MASTER;
         SnakesProto.GameState.Builder builder = SnakesProto.GameState.newBuilder();
 
@@ -100,11 +109,12 @@ public class GameModel extends Observable {
         this.state = builder.build();
     }
 
-    public void init(SnakesProto.GameConfig config, String ip, int port, String name) {
+    public synchronized void init(SnakesProto.GameConfig config, String ip, int port, String name) {
         init(config);
         this.role = SnakesProto.NodeRole.MASTER;
         canJoin(ip, port);
         this.ownId = 1;
+        this.openedToAck = true;
         addPlayer(name, port, ip);
     }
 
@@ -218,6 +228,12 @@ public class GameModel extends Observable {
         List<SnakesProto.GamePlayer> playerList = new ArrayList<>(state.getPlayers().getPlayersList());
         List<Integer> playersId = players.parallelStream().mapToInt(SnakesProto.GamePlayer::getId).boxed().collect(Collectors.toList());
         playerList.removeIf(player -> playersId.contains(player.getId()));
+        List<SnakesProto.GameState.Snake> snakes = new ArrayList<>(state.getSnakesList());
+        snakes.replaceAll(snake -> {
+            if (playersId.contains(snake.getPlayerId()))
+                return snake.toBuilder().setPlayerId(-1).setState(SnakesProto.GameState.Snake.SnakeState.ZOMBIE).build();
+            return snake;
+        });
         this.state = state.toBuilder().setPlayers(SnakesProto.GamePlayers.newBuilder().addAllPlayers(playerList).build()).build();
     }
 
@@ -235,7 +251,7 @@ public class GameModel extends Observable {
 
         SnakesProto.GamePlayer.Builder playerBuilder = SnakesProto.GamePlayer.newBuilder();
         playerBuilder
-                .setId(state.getPlayers().getPlayersCount() + 1)
+                .setId(nextPlayerId++)
                 .setScore(0)
                 .setRole(nextRole)
                 .setIpAddress(ip)

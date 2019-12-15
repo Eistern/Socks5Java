@@ -29,6 +29,7 @@ public class ConnectListener implements ActionListener {
         try {
             model.init(ConfigService.getSystemConfig());
             model.setRole(SnakesProto.NodeRole.NORMAL);
+            model.setOpenedToAck(true);
             networkManager.commit(SnakesProto.GameMessage.newBuilder().setJoin(
                     SnakesProto.GameMessage.JoinMsg.newBuilder()
                             .setOnlyView(false)

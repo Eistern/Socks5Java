@@ -47,7 +47,9 @@ public class ExitButtonListener implements ActionListener {
                         .build(), new InetSocketAddress(player.getIpAddress(), player.getPort()));
             }
             threadManager.pauseActivities();
+
             model.init(ConfigService.getSystemConfig());
+            model.setOpenedToAck(false);
         } catch (ClassNotFoundException | IOException | InterruptedException ex) {
             ex.printStackTrace();
         }

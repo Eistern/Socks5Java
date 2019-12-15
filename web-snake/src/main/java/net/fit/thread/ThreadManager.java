@@ -39,7 +39,7 @@ public class ThreadManager {
         datagramListenerThread.start();
         announcementListenerThread.start();
 
-        ConnectFrame frame = new ConnectFrame(networkManager, datagramAnnouncements, model, this, currentPort);
+        ConnectFrame frame = new ConnectFrame(networkManager, datagramListener, datagramAnnouncements, model, this, currentPort);
         frame.setVisible(true);
 
         ViewFrame viewFrame = new ViewFrame(model, this.networkManager, this, currentPort);
