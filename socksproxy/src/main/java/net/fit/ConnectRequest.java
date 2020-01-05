@@ -1,8 +1,10 @@
 package net.fit;
 
 import lombok.AccessLevel;
+import lombok.Data;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
+import org.xbill.DNS.Address;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -10,6 +12,7 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.Arrays;
 
+@Data
 @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
 public class ConnectRequest {
     @RequiredArgsConstructor
@@ -46,10 +49,11 @@ public class ConnectRequest {
 
     private static final ByteBuffer byteBuffer = ByteBuffer.allocate(4);
     private final Command command;
+    private final AddressType addressType;
     private final InetAddress address;
-    private final int port;
+    private final short port;
 
-    public ConnectRequest parseFromBytes(byte[] input) throws UnknownHostException {
+    public static ConnectRequest parseFromBytes(byte[] input) throws UnknownHostException {
         if (input.length < 6)
             return null;
         if (input[0] != 0x05 || input[2] != 0x00)
@@ -81,19 +85,21 @@ public class ConnectRequest {
                 break;
         }
         byte[] address = Arrays.copyOfRange(input, addrOffset, addrOffset + addrLen);
-        InetAddress resultAddress = null;
+        InetAddress resultAddress;
         if (addressType != AddressType.DOMAIN_NAME) {
              resultAddress = InetAddress.getByAddress(address);
         }
         else {
             String hostname = new String(address);
-            //TODO: RESOLVE HOSTNAME
+            resultAddress = Address.getByName(hostname);
+            //TODO: RESOLVE HOSTNAME ASYNCHRONOUSLY
         }
 
         byte[] portBytes = Arrays.copyOfRange(input, input.length - 2, input.length);
         byteBuffer.put(portBytes);
-        int port = byteBuffer.getInt();
+        byteBuffer.rewind();
+        short port = byteBuffer.getShort();
 
-        return new ConnectRequest(command, resultAddress, port);
+        return new ConnectRequest(requestCommand, addressType, resultAddress, port);
     }
 }

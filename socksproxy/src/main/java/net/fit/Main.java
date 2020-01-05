@@ -3,9 +3,8 @@ package net.fit;
 import lombok.SneakyThrows;
 
 import java.net.InetSocketAddress;
-import java.nio.channels.SelectionKey;
-import java.nio.channels.Selector;
-import java.nio.channels.ServerSocketChannel;
+import java.nio.channels.*;
+import java.util.Iterator;
 import java.util.Set;
 
 public class Main {
@@ -25,13 +24,36 @@ public class Main {
         ServerSocketChannel listeningChannel = ServerSocketChannel.open();
         listeningChannel.bind(new InetSocketAddress(port));
         listeningChannel.configureBlocking(false);
-        SelectionKey key = listeningChannel.register(selector, SelectionKey.OP_ACCEPT);
+        SelectionKey listeningKey = listeningChannel.register(selector, SelectionKey.OP_ACCEPT);
         //REGISTERED ServerSocketChannel
+
+        DatagramChannel dnsChannel = DatagramChannel.open();
+        dnsChannel.connect(new InetSocketAddress(System.getProperty("dns.server"), 53));
+        dnsChannel.configureBlocking(false);
+        SelectionKey dnsKey = dnsChannel.register(selector, 0);
+        //REGISTERED DnsChannel
+
+        ListeningChannelHandler listeningChannelHandler = new ListeningChannelHandler(selector);
+        DNSChannelHandler dnsChannelHandler = new DNSChannelHandler(dnsKey);
+        PairingService pairingService = new PairingService();
+        SocksHandler socksHandler = new SocksHandler(selector, pairingService);
+        DefaultChannelHandler defaultChannelHandler = new DefaultChannelHandler(pairingService, socksHandler);
 
         while (true) {
             selector.select();
             Set<SelectionKey> selectionKeys = selector.selectedKeys();
+            for (Iterator<SelectionKey> iterator = selectionKeys.iterator(); iterator.hasNext(); ) {
+                SelectionKey selectionKey = iterator.next();
+                iterator.remove();
 
+                if (selectionKey.equals(listeningKey) && selectionKey.isAcceptable()) {
+                    listeningChannelHandler.accept(selectionKey);
+                } else if (selectionKey.equals(dnsKey)) {
+                    dnsChannelHandler.accept(selectionKey);
+                } else {
+                    defaultChannelHandler.accept(selectionKey);
+                }
+            }
         }
     }
 }
