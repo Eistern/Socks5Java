@@ -5,22 +5,22 @@ import lombok.SneakyThrows;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.SocketChannel;
-import java.util.Arrays;
 import java.util.function.Consumer;
 
 @RequiredArgsConstructor
 public class DefaultChannelHandler implements Consumer<SelectionKey> {
     private final PairingService pairingService;
     private final SocksHandler socksHandler;
-    private ByteBuffer byteBuffer = ByteBuffer.allocate(8196);
 
     @SneakyThrows
     private void readFromChannel(SelectionKey selectionKey) {
         SocketChannel socketChannel = (SocketChannel) selectionKey.channel();
         ChannelContext context = (ChannelContext) selectionKey.attachment();
-        byteBuffer.clear();
+        ByteBuffer byteBuffer = ByteBuffer.allocate(8196);
+        byteBuffer.order(ByteOrder.BIG_ENDIAN);
         int read;
         try {
             read = socketChannel.read(byteBuffer);
@@ -28,6 +28,11 @@ public class DefaultChannelHandler implements Consumer<SelectionKey> {
         catch (IOException e) {
             System.err.println("Channel closed by force in regular read....");
             socketChannel.close();
+            context.getDataToSend().clear();
+            context.setWantClose(true);
+            context.getPairedContext().addData(ByteBuffer.allocate(1));
+            context.getPairedContext().enableWrite();
+            context.getPairedContext().notifySourceKey();
             selectionKey.cancel();
             return;
         }
@@ -39,15 +44,13 @@ public class DefaultChannelHandler implements Consumer<SelectionKey> {
                 selectionKey.cancel();
                 return;
             }
-            context.getPairedContext().addData(new byte[]{});
+            context.getPairedContext().addData(ByteBuffer.allocate(1));
             context.disableRead();
         } else {
-            byte[] data = Arrays.copyOf(byteBuffer.array(), read);
-            System.out.println("Read data: " + new String(data));
-            boolean hasMoreSpace = context.getPairedContext().addData(data);
+            System.out.println("Read data:\n" + new String(byteBuffer.array(), 0, byteBuffer.position()));
+            boolean hasMoreSpace = context.getPairedContext().addData(byteBuffer);
             if (!hasMoreSpace) {
                 context.disableRead();
-                System.out.println("---------No more space, shutting down read....-------");
             }
         }
         context.getPairedContext().enableWrite();
@@ -59,31 +62,33 @@ public class DefaultChannelHandler implements Consumer<SelectionKey> {
     private void writeToChannel(SelectionKey selectionKey) {
         SocketChannel socketChannel = (SocketChannel) selectionKey.channel();
         ChannelContext context = (ChannelContext) selectionKey.attachment();
-        byteBuffer.clear();
-        byte[] nextBlock = context.getDataToSend().get(0);
+        ByteBuffer byteBuffer = context.getDataToSend().get(0);
         context.getDataToSend().remove(0);
-        System.out.println("Sending data: " + new String(nextBlock));
-        byteBuffer.put(nextBlock);
+        System.out.println("Sending data:\n" + new String(byteBuffer.array(), 0, byteBuffer.position()));
         byteBuffer.flip();
-        byteBuffer.rewind();
         try {
             socketChannel.write(byteBuffer);
             byteBuffer.compact();
+            byteBuffer.clear();
+            if (!context.getPairedContext().isWantClose()) {
+                context.getPairedContext().enableRead();
+                context.getPairedContext().notifySourceKey();
+            }
+            if (context.getDataToSend().size() == 0)
+                context.disableWrite();
+            if (context.getDataToSend().size() == 0 && context.getPairedContext().isWantClose())
+                socketChannel.shutdownOutput();
+
         } catch (IOException e) {
             System.err.println("Channel closed by force in regular write....");
             socketChannel.close();
-            selectionKey.cancel();
-            return;
-        }
-
-        if (!context.getPairedContext().isWantClose()) {
-            context.getPairedContext().enableRead();
+            context.getDataToSend().clear();
+            context.setWantClose(true);
+            context.getPairedContext().addData(ByteBuffer.allocate(1));
+            context.getPairedContext().enableWrite();
             context.getPairedContext().notifySourceKey();
+            selectionKey.cancel();
         }
-        if (context.getDataToSend().size() == 0)
-            context.disableWrite();
-        if (context.getDataToSend().size() == 0 && context.getPairedContext().isWantClose())
-            socketChannel.shutdownOutput();
     }
 
     @SneakyThrows

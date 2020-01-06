@@ -57,17 +57,18 @@ public class SocksHandler implements Consumer<SelectionKey> {
     private void writeAuthResponse(SelectionKey selectionKey) {
         SocketChannel socketChannel = (SocketChannel) selectionKey.channel();
         ChannelContext context = (ChannelContext) selectionKey.attachment();
-        byteBuffer.clear();
         AuthenticationRequest.AuthenticationMethod method;
-        if (context.getAuthenticationRequest().getMethodsList().contains(AuthenticationRequest.AuthenticationMethod.NO_AUTH))
+        if (context.getAuthenticationRequest().getMethodsList().contains(AuthenticationRequest.AuthenticationMethod.NO_AUTH)) {
             method = AuthenticationRequest.AuthenticationMethod.NO_AUTH;
-        else
+        }
+        else {
             method = AuthenticationRequest.AuthenticationMethod.NO_ACCEPTABLE;
+        }
         byte[] responseBytes = AuthenticationResponse.generateResponse(method);
         System.out.println("Writing response: " + Arrays.toString(responseBytes));
+        byteBuffer.clear();
         byteBuffer.put(responseBytes);
         byteBuffer.flip();
-        byteBuffer.rewind();
         try {
             socketChannel.write(byteBuffer);
         } catch (IOException e) {
@@ -103,6 +104,7 @@ public class SocksHandler implements Consumer<SelectionKey> {
             return;
         }
         byte[] requestBytes = Arrays.copyOf(byteBuffer.array(), read);
+        System.out.println("Got request: " + Arrays.toString(requestBytes));
         ConnectRequest connectRequest = ConnectRequest.parseFromBytes(requestBytes);
         context.setConnectRequest(connectRequest);
         context.disableRead();
@@ -126,9 +128,10 @@ public class SocksHandler implements Consumer<SelectionKey> {
         else {
             status = ConnectResponse.Status.SUCCEEDED;
         }
-        byteBuffer.put(ConnectResponse.generateResponse(status, ConnectRequest.AddressType.IP_V4, request.getAddress(), request.getPort()));
+        byte[] responseBytes = ConnectResponse.generateResponse(status, ConnectRequest.AddressType.IP_V4, request.getAddress(), request.getPort());
+        System.out.println("Writing response: " + Arrays.toString(responseBytes));
+        byteBuffer.put(responseBytes);
         byteBuffer.flip();
-        byteBuffer.rewind();
         try {
             socketChannel.write(byteBuffer);
         } catch (IOException e) {

@@ -38,12 +38,16 @@ public class ConnectResponse {
         byte[] portCode = portConvert.array();
         byte[] addrCode = address.getAddress();
 
-        ByteBuffer byteBuffer = ByteBuffer.allocate(6 + addrCode.length + 1);
+        int responseLength = 6 + addrCode.length;
+        if (addressType == ConnectRequest.AddressType.DOMAIN_NAME)
+            responseLength++;
+        ByteBuffer byteBuffer = ByteBuffer.allocate(responseLength);
         byteBuffer.put((byte) 0x05);
         byteBuffer.put(status.getCode());
         byteBuffer.put((byte) 0x00);
         byteBuffer.put(addressType.getCode());
-        byteBuffer.put((byte) addrCode.length);
+        if (addressType == ConnectRequest.AddressType.DOMAIN_NAME)
+            byteBuffer.put((byte) addrCode.length);
         byteBuffer.put(addrCode);
         byteBuffer.put(portCode);
         return byteBuffer.array();
