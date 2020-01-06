@@ -40,7 +40,7 @@ public class Main {
         ListeningChannelHandler listeningChannelHandler = new ListeningChannelHandler(selector);
         DNSChannelHandler dnsChannelHandler = new DNSChannelHandler(dnsKey);
         PairingService pairingService = new PairingService();
-        SocksHandler socksHandler = new SocksHandler(selector, pairingService);
+        SocksHandler socksHandler = new SocksHandler(selector, pairingService, dnsChannelHandler);
         DefaultChannelHandler defaultChannelHandler = new DefaultChannelHandler(pairingService, socksHandler);
 
         while (true) {

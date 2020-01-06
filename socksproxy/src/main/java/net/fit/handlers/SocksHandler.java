@@ -17,6 +17,7 @@ import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.SocketChannel;
 import java.util.Arrays;
+import java.util.Objects;
 import java.util.function.Consumer;
 
 @RequiredArgsConstructor
@@ -29,7 +30,7 @@ public class SocksHandler implements Consumer<SelectionKey> {
 
     private final Selector selector;
     private final PairingService pairingService;
-
+    private final DNSChannelHandler dnsResolver;
 
     @SneakyThrows
     private void readAuthRequest(SelectionKey selectionKey) {
@@ -113,7 +114,12 @@ public class SocksHandler implements Consumer<SelectionKey> {
         ConnectRequest connectRequest = ConnectRequest.parseFromBytes(requestBytes);
         context.setConnectRequest(connectRequest);
         context.disableRead();
-        context.enableWrite();
+        if (Objects.requireNonNull(connectRequest).getAddress() != null) {
+            context.enableWrite();
+        }
+        else {
+            dnsResolver.addMessage(connectRequest.getHostName(), selectionKey);
+        }
     }
 
 

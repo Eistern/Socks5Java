@@ -1,19 +1,18 @@
 package net.fit.handshake;
 
-import lombok.AccessLevel;
-import lombok.Data;
-import lombok.Getter;
-import lombok.RequiredArgsConstructor;
+import lombok.*;
+import net.fit.handlers.DNSChannelHandler;
 import org.xbill.DNS.Address;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import java.nio.channels.SelectionKey;
 import java.util.Arrays;
 
 @Data
-@RequiredArgsConstructor(access = AccessLevel.PRIVATE)
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
 public class ConnectRequest {
     @RequiredArgsConstructor
     public enum Command {
@@ -50,7 +49,8 @@ public class ConnectRequest {
     private static final ByteBuffer byteBuffer = ByteBuffer.allocate(4);
     private final Command command;
     private final AddressType addressType;
-    private final InetAddress address;
+    private InetAddress address;
+    private String hostName;
     private final short port;
 
     public static ConnectRequest parseFromBytes(byte[] input) throws UnknownHostException {
@@ -86,13 +86,14 @@ public class ConnectRequest {
         }
         byte[] address = Arrays.copyOfRange(input, addrOffset, addrOffset + addrLen);
         InetAddress resultAddress;
+        String hostname = null;
         if (addressType != AddressType.DOMAIN_NAME) {
              resultAddress = InetAddress.getByAddress(address);
         }
         else {
-            String hostname = new String(address);
-            resultAddress = Address.getByName(hostname);
-            //TODO: RESOLVE HOSTNAME ASYNCHRONOUSLY
+            System.out.println("--------------------------------ACTUALLY USING DNS-------------------------------------------");
+            hostname = new String(address);
+            resultAddress = null;
         }
 
         byte[] portBytes = Arrays.copyOfRange(input, input.length - 2, input.length);
@@ -100,6 +101,6 @@ public class ConnectRequest {
         byteBuffer.rewind();
         short port = byteBuffer.getShort();
 
-        return new ConnectRequest(requestCommand, addressType, resultAddress, port);
+        return new ConnectRequest(requestCommand, addressType, resultAddress, hostname, port);
     }
 }

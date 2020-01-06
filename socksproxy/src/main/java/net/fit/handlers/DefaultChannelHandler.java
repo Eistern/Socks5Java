@@ -64,8 +64,7 @@ public class DefaultChannelHandler implements Consumer<SelectionKey> {
     private void writeToChannel(SelectionKey selectionKey) {
         SocketChannel socketChannel = (SocketChannel) selectionKey.channel();
         ChannelContext context = (ChannelContext) selectionKey.attachment();
-        ByteBuffer byteBuffer = context.getDataToSend().get(0);
-        context.getDataToSend().remove(0);
+        ByteBuffer byteBuffer = context.getDataToSend().remove(0);
         System.out.println("Sending data:\n" + new String(byteBuffer.array(), 0, byteBuffer.position()));
         byteBuffer.flip();
         try {
