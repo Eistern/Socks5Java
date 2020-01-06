@@ -4,6 +4,8 @@ import lombok.AccessLevel;
 import lombok.Data;
 import lombok.Getter;
 import lombok.ToString;
+import net.fit.handshake.AuthenticationRequest;
+import net.fit.handshake.ConnectRequest;
 
 import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;

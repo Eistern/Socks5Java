@@ -1,7 +1,8 @@
-package net.fit;
+package net.fit.handlers;
 
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
+import net.fit.ChannelContext;
 
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;

@@ -1,6 +1,10 @@
 package net.fit;
 
 import lombok.SneakyThrows;
+import net.fit.handlers.DNSChannelHandler;
+import net.fit.handlers.DefaultChannelHandler;
+import net.fit.handlers.ListeningChannelHandler;
+import net.fit.handlers.SocksHandler;
 
 import java.net.InetSocketAddress;
 import java.nio.channels.*;

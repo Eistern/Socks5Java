@@ -1,4 +1,4 @@
-package net.fit;
+package net.fit.handshake;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;

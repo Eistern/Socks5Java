@@ -1,7 +1,12 @@
-package net.fit;
+package net.fit.handlers;
 
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
+import net.fit.*;
+import net.fit.handshake.AuthenticationRequest;
+import net.fit.handshake.AuthenticationResponse;
+import net.fit.handshake.ConnectRequest;
+import net.fit.handshake.ConnectResponse;
 
 import java.io.IOException;
 import java.net.InetAddress;

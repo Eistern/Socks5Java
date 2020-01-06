@@ -1,4 +1,4 @@
-package net.fit;
+package net.fit.handlers;
 
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;

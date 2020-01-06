@@ -1,4 +1,4 @@
-package net.fit;
+package net.fit.handshake;
 
 public class AuthenticationResponse {
     public static byte[] generateResponse(AuthenticationRequest.AuthenticationMethod method) {
