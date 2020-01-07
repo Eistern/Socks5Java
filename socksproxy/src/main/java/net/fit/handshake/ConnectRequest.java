@@ -85,7 +85,7 @@ public class ConnectRequest {
                 break;
         }
         byte[] address = Arrays.copyOfRange(input, addrOffset, addrOffset + addrLen);
-        InetAddress resultAddress;
+        InetAddress resultAddress = null;
         String hostname = null;
         if (addressType != AddressType.DOMAIN_NAME) {
              resultAddress = InetAddress.getByAddress(address);
@@ -93,7 +93,6 @@ public class ConnectRequest {
         else {
             System.out.println("--------------------------------ACTUALLY USING DNS-------------------------------------------");
             hostname = new String(address);
-            resultAddress = null;
         }
 
         byte[] portBytes = Arrays.copyOfRange(input, input.length - 2, input.length);

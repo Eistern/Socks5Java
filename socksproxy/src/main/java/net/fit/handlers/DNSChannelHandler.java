@@ -21,7 +21,14 @@ public class DNSChannelHandler implements Consumer<SelectionKey> {
 
     @SneakyThrows
     void addMessage(String hostName, SelectionKey from) {
-        Name host = Name.fromString(hostName);
+        String resultHostname;
+        if (!hostName.endsWith(".")) {
+            resultHostname = hostName + ".";
+        } else {
+            resultHostname = hostName;
+        }
+
+        Name host = Name.fromString(resultHostname);
         Record question = Record.newRecord(host, Type.A, DClass.IN);
         Message nextMessage = Message.newQuery(question);
         pendingRequests.add(nextMessage);
@@ -41,27 +48,39 @@ public class DNSChannelHandler implements Consumer<SelectionKey> {
         if (selectionKey.isReadable()) {
             byteBuffer.clear();
             dnsChannel.read(byteBuffer);
-            Message receivedMessage = new Message(byteBuffer);
+            Message receivedMessage = new Message(byteBuffer.array());
             Record receivedQuestion = receivedMessage.getQuestion();
+            System.out.println("Received DNS response:\n" + receivedMessage);
             SelectionKey questionSource = keysRequests.get(receivedQuestion);
             if (questionSource == null) {
+                System.out.println("Didn't find question:\n" + receivedQuestion + "\nIn:\n" + keysRequests);
                 return;
             }
             keysRequests.remove(receivedQuestion);
             Record[] answers = receivedMessage.getSectionArray(Section.ANSWER);
-            InetAddress address;
-            if (answers[0] instanceof ARecord) {
-                ARecord aRecord = (ARecord) answers[0];
-                address = aRecord.getAddress();
+            InetAddress address = null;
+            for (Record answer : answers) {
+                if (address == null && (answer instanceof ARecord || answer instanceof A6Record)) {
+                    if (answer instanceof ARecord) {
+                        ARecord aRecord = (ARecord) answer;
+                        address = aRecord.getAddress();
+                    } else {
+                        A6Record a6Record = (A6Record) answer;
+                        address = a6Record.getSuffix();
+                    }
+                }
+            }
+            if (address == null) {
+                System.err.println("Got response without needed answer entry, closing channel....");
+                questionSource.channel().close();
+                questionSource.cancel();
             }
             else {
-                A6Record a6Record = (A6Record) answers[0];
-                address = a6Record.getSuffix();
+                ChannelContext context = (ChannelContext) questionSource.attachment();
+                context.getConnectRequest().setAddress(address);
+                context.enableWrite();
+                context.notifySourceKey();
             }
-            ChannelContext context = (ChannelContext) questionSource.attachment();
-            context.getConnectRequest().setAddress(address);
-            context.enableWrite();
-            context.notifySourceKey();
 
             if (keysRequests.isEmpty()) {
                 int interest = selectionKey.interestOps();
@@ -72,6 +91,7 @@ public class DNSChannelHandler implements Consumer<SelectionKey> {
             byteBuffer.clear();
             Message nextMessage = pendingRequests.remove(0);
             byte[] message = nextMessage.toWire();
+            System.out.println("Sending DNS request:\n" + nextMessage);
             byteBuffer.put(message);
             byteBuffer.flip();
             dnsChannel.write(byteBuffer);
